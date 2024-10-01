@@ -9,13 +9,9 @@
 #include <cstdarg>
 #include <logging.hpp>
 #include <gpio.hpp>
-#include <power.hpp>
-#include <settingscollection.hpp>
-#include <i2c.hpp>
 #ifndef generic
 #include "main.h"
 extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart2;
 #endif
 
 uint32_t logging::activeSources{0};
@@ -28,24 +24,11 @@ void logging::initialize() {
 #ifndef platformio                                                             // SWO TRACE is not working on PlatformIO
         logging::enable(logging::destination::debugProbe);
 #endif
-        LL_DBGMCU_EnableDBGStopMode();
-    } else {
-        LL_DBGMCU_DisableDBGStopMode();
     }
 #endif
-    if (power::hasUsbPower()) {
-        logging::enable(logging::destination::uart2usb);
-    }
     if (!logging::isActive(logging::destination::debugProbe)) {
         gpio::disableGpio(gpio::group::debugPort);
     }
-
-    i2c::wakeUp();
-    logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
-    logging::enable(logging::source::sensorData);
-    logging::enable(logging::source::sensorEvents);
-    logging::enable(logging::source::applicationEvents);
-    i2c::goSleep();
 }
 
 uint32_t logging::snprintf(const char *format, ...) {
@@ -81,11 +64,6 @@ void logging::write(uint32_t dataLength) {
             ITM_SendChar(static_cast<uint32_t>(buffer[index]));
 #endif
         }
-    }
-    if (isActive(destination::uart2usb)) {
-#ifndef generic
-        HAL_UART_Transmit(&huart2, (uint8_t *)buffer, static_cast<const uint16_t>(dataLength), 1000);
-#endif
     }
     if (isActive(destination::uart1)) {
 #ifndef generic
@@ -123,26 +101,12 @@ const char *toString(logging::source aSource) {
             return "sensorEvents";
         case logging::source::sensorData:
             return "sensorData";
-        case logging::source::displayEvents:
-            return "displayEvents";
-        case logging::source::displayData:
-            return "displayData";
-        case logging::source::eepromData:
-            return "eepromData";
-        case logging::source::eepromEvents:
-            return "eepromEvents";
-        case logging::source::lorawanEvents:
-            return "lorawanEvents";
-        case logging::source::lorawanData:
-            return "lorawanData";
-        case logging::source::lorawanMac:
-            return "lorawanMac";
-        case logging::source::sx126xControl:
-            return "sx126xControl";
-        case logging::source::sx126xBufferData:
-            return "sx126xBufferData";
-        case logging::source::settings:
-            return "settings";
+        case logging::source::sdCardData:
+            return "sdCardData";
+        case logging::source::sdCardEvents:
+            return "sdCardEvents";
+        case logging::source::warning:
+            return "warning";
         case logging::source::error:
             return "error";
         case logging::source::criticalError:
@@ -156,8 +120,6 @@ const char *toString(logging::destination aDestination) {
     switch (aDestination) {
         case logging::destination::debugProbe:
             return "debugProbe";
-        case logging::destination::uart2usb:
-            return "uart2usb";
         case logging::destination::uart1:
             return "uart1";
         default:

@@ -14,23 +14,15 @@ class logging {
     enum class destination : uint32_t {        // We can send logging to the following destinations, when they are connected and enabled :
         none,
         debugProbe,
-        uart2usb,
         uart1
     };
     enum class source : uint32_t {        // We can send logging from the following sources, when they are enabled :
         applicationEvents = 0,
         sensorEvents      = 2,
         sensorData        = 3,
-        displayEvents     = 4,
-        displayData       = 5,
-        eepromData        = 6,
-        eepromEvents      = 7,
-        lorawanEvents     = 16,
-        lorawanData       = 17,
-        lorawanMac        = 18,
-        sx126xControl     = 24,
-        sx126xBufferData  = 25,
-        settings          = 29,
+        sdCardData        = 6,
+        sdCardEvents      = 7,
+        warning           = 29,
         error             = 30,
         criticalError     = 31
     };

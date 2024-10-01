@@ -11,6 +11,26 @@ void setUp(void) {
 void tearDown(void) {
 }
 
+void test_cs_bme68x() {
+    static constexpr uint32_t period{3000};
+    TEST_MESSAGE("Measure voltage on CS-BME68X");
+    gpio::enableGpio(gpio::group::spiSensor);
+    for (uint32_t loops = 0; loops < 16; loops++) {
+        HAL_GPIO_TogglePin(CS_SDCARD_GPIO_Port, CS_SDCARD_Pin);
+        HAL_Delay(period);
+    }
+}
+
+void test_cs_sdcard() {
+    static constexpr uint32_t period{3000};
+    TEST_MESSAGE("Measure voltage on CS-SDCard");
+    gpio::enableGpio(gpio::group::spiSensor);
+    for (uint32_t loops = 0; loops < 16; loops++) {
+        HAL_GPIO_TogglePin(CS_BME688_GPIO_Port, CS_BME688_Pin);
+        HAL_Delay(period);
+    }
+}
+
 void test_card_detect() {
     static constexpr uint32_t testTimeOut{5000};
     TEST_MESSAGE("Card detect test - Insert, then remove card, then insert again");
@@ -48,6 +68,8 @@ int main(int argc, char** argv) {
     HAL_Delay(2000);
     SystemClock_Config();
     UNITY_BEGIN();
+    RUN_TEST(test_cs_bme68x);
+    RUN_TEST(test_cs_sdcard);
     RUN_TEST(test_card_detect);
     UNITY_END();
 }
