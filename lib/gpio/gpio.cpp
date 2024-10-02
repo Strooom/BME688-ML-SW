@@ -31,21 +31,21 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
     switch (theGroup) {
         case gpio::group::i2c:
             if (enable) {
-                GPIO_InitTypeDef GPIO_InitStruct{0};
-                // hardware pin 29 = PB6 = I2C2_SCL
-                GPIO_InitStruct.Pin       = GPIO_PIN_6;
-                GPIO_InitStruct.Mode      = GPIO_MODE_AF_OD;
-                GPIO_InitStruct.Pull      = GPIO_NOPULL;
-                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
-                GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
-                HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+                GPIO_InitTypeDef GpioSettings{0};
+                // hardware pin 29 = PB6 = I2C1_SCL
+                GpioSettings.Pin       = GPIO_PIN_6;
+                GpioSettings.Mode      = GPIO_MODE_AF_OD;
+                GpioSettings.Pull      = GPIO_NOPULL;
+                GpioSettings.Speed     = GPIO_SPEED_FREQ_LOW;
+                GpioSettings.Alternate = GPIO_AF4_I2C1;
+                HAL_GPIO_Init(GPIOB, &GpioSettings);
                 // hardware Pin 30 = PB7 = I2C1_SDA
-                GPIO_InitStruct.Pin       = GPIO_PIN_7;
-                GPIO_InitStruct.Mode      = GPIO_MODE_AF_OD;
-                GPIO_InitStruct.Pull      = GPIO_NOPULL;
-                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
-                GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
-                HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+                GpioSettings.Pin       = GPIO_PIN_7;
+                GpioSettings.Mode      = GPIO_MODE_AF_OD;
+                GpioSettings.Pull      = GPIO_NOPULL;
+                GpioSettings.Speed     = GPIO_SPEED_FREQ_LOW;
+                GpioSettings.Alternate = GPIO_AF4_I2C1;
+                HAL_GPIO_Init(GPIOB, &GpioSettings);
             } else {
                 HAL_GPIO_DeInit(GPIOB, GPIO_PIN_6);
                 HAL_GPIO_DeInit(GPIOB, GPIO_PIN_7);
@@ -54,13 +54,14 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
 
         case gpio::group::spiSensor:
             if (enable) {
-                // hardware pin 6 = A0 = CS-BME68X
-                GPIO_InitTypeDef GPIO_InitStruct{0};
-                GPIO_InitStruct.Pin   = GPIO_PIN_0;
-                GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-                GPIO_InitStruct.Pull  = GPIO_NOPULL;
-                GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-                HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+                GPIO_InitTypeDef GpioSettings{0};
+                // hardware pin 6 = PA0 = CS-BME68X
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+                GpioSettings.Pin   = GPIO_PIN_0;
+                GpioSettings.Mode  = GPIO_MODE_OUTPUT_PP;
+                GpioSettings.Pull  = GPIO_NOPULL;        // CS has a pullup resistor on the PCB
+                GpioSettings.Speed = GPIO_SPEED_FREQ_LOW;
+                HAL_GPIO_Init(GPIOA, &GpioSettings);
             } else {
                 HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
             }
@@ -69,19 +70,20 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
 
         case gpio::group::spiMemory:
             if (enable) {
-                GPIO_InitTypeDef GPIO_InitStruct{0};
-                // hardware pin 8 = A2 = CS-SDcard
-                GPIO_InitStruct.Pin   = GPIO_PIN_2;
-                GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-                GPIO_InitStruct.Pull  = GPIO_NOPULL;
-                GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-                HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-                // hardware pin 9 = A3 = SDcardDetect
-                GPIO_InitStruct.Pin   = GPIO_PIN_3;
-                GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
-                GPIO_InitStruct.Pull  = GPIO_PULLUP;
-                GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-                HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+                GPIO_InitTypeDef GpioSettings{0};
+                // hardware pin 8 = PA2 = CS-SDcard
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
+                GpioSettings.Pin   = GPIO_PIN_2;
+                GpioSettings.Mode  = GPIO_MODE_OUTPUT_PP;
+                GpioSettings.Pull  = GPIO_NOPULL;        // CS has a pullup resistor on the PCB
+                GpioSettings.Speed = GPIO_SPEED_FREQ_LOW;
+                HAL_GPIO_Init(GPIOA, &GpioSettings);
+                // hardware pin 9 = PA3 = SDcardDetect
+                GpioSettings.Pin   = GPIO_PIN_3;
+                GpioSettings.Mode  = GPIO_MODE_INPUT;
+                GpioSettings.Pull  = GPIO_PULLUP;        // There is no pullup resistor on the PCB
+                GpioSettings.Speed = GPIO_SPEED_FREQ_LOW;
+                HAL_GPIO_Init(GPIOA, &GpioSettings);
             } else {
                 HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2);
                 HAL_GPIO_DeInit(GPIOA, GPIO_PIN_3);
@@ -91,32 +93,32 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
 
         case gpio::group::spi:
             if (enable) {
-                GPIO_InitTypeDef GPIO_InitStruct{0};
-                // hardware Pin 7 = A1 = SPI1_SCK
-                GPIO_InitStruct.Pin       = GPIO_PIN_13;
-                GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-                GPIO_InitStruct.Pull      = GPIO_NOPULL;
-                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_MEDIUM;
-                GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-                HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+                GPIO_InitTypeDef GpioSettings{0};
+                // hardware pin 7 = PA1 = SPI1_SCK
+                GpioSettings.Pin       = GPIO_PIN_1;
+                GpioSettings.Mode      = GPIO_MODE_AF_PP;
+                GpioSettings.Pull      = GPIO_NOPULL;
+                GpioSettings.Speed     = GPIO_SPEED_FREQ_MEDIUM;
+                GpioSettings.Alternate = GPIO_AF5_SPI1;
+                HAL_GPIO_Init(GPIOA, &GpioSettings);
                 // hardware pin 12 = PA6 = SPI1 MISO
-                GPIO_InitStruct.Pin       = GPIO_PIN_6;
-                GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-                GPIO_InitStruct.Pull      = GPIO_NOPULL;
-                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_MEDIUM;
-                GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-                HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+                GpioSettings.Pin       = GPIO_PIN_6;
+                GpioSettings.Mode      = GPIO_MODE_AF_PP;
+                GpioSettings.Pull      = GPIO_NOPULL;
+                GpioSettings.Speed     = GPIO_SPEED_FREQ_MEDIUM;
+                GpioSettings.Alternate = GPIO_AF5_SPI1;
+                HAL_GPIO_Init(GPIOA, &GpioSettings);
                 // hardware pin 13 = PA7 = SPI1_MOSI
-                GPIO_InitStruct.Pin       = GPIO_PIN_10;
-                GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-                GPIO_InitStruct.Pull      = GPIO_NOPULL;
-                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_MEDIUM;
-                GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-                HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+                GpioSettings.Pin       = GPIO_PIN_7;
+                GpioSettings.Mode      = GPIO_MODE_AF_PP;
+                GpioSettings.Pull      = GPIO_NOPULL;
+                GpioSettings.Speed     = GPIO_SPEED_FREQ_MEDIUM;
+                GpioSettings.Alternate = GPIO_AF5_SPI1;
+                HAL_GPIO_Init(GPIOA, &GpioSettings);
             } else {
-                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13);
+                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1);
                 HAL_GPIO_DeInit(GPIOA, GPIO_PIN_6);
-                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_10);
+                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_7);
             }
             break;
 
@@ -125,21 +127,21 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
                 // These need to be set as after reset...
             } else {
                 // NOTE : This resets the SWD AND JTAG pins to analog inputs (lowest power consumption).
-                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13 | GPIO_PIN_14 );
-                HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3 );
+                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13 | GPIO_PIN_14);
+                HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3);
             }
             break;
 
         case gpio::group::uart1:
             if (enable) {
-                GPIO_InitTypeDef GPIO_InitStruct{0};
-                // hardwarepin 19 = PA9 = USART1_TX
-                GPIO_InitStruct.Pin       = GPIO_PIN_9;
-                GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-                GPIO_InitStruct.Pull      = GPIO_NOPULL;
-                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
-                GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-                HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+                GPIO_InitTypeDef GpioSettings{0};
+                // hardware pin 19 = PA9 = USART1_TX
+                GpioSettings.Pin       = GPIO_PIN_9;
+                GpioSettings.Mode      = GPIO_MODE_AF_PP;
+                GpioSettings.Pull      = GPIO_NOPULL;
+                GpioSettings.Speed     = GPIO_SPEED_FREQ_LOW;
+                GpioSettings.Alternate = GPIO_AF7_USART1;
+                HAL_GPIO_Init(GPIOA, &GpioSettings);
             } else {
                 HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9);
             }

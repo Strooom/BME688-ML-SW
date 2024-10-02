@@ -16,7 +16,7 @@ void test_cs_bme68x() {
     TEST_MESSAGE("Measure voltage on CS-BME68X");
     gpio::enableGpio(gpio::group::spiSensor);
     for (uint32_t loops = 0; loops < 16; loops++) {
-        HAL_GPIO_TogglePin(CS_SDCARD_GPIO_Port, CS_SDCARD_Pin);
+        HAL_GPIO_TogglePin(CS_BME688_GPIO_Port, CS_BME688_Pin);
         HAL_Delay(period);
     }
 }
@@ -24,9 +24,9 @@ void test_cs_bme68x() {
 void test_cs_sdcard() {
     static constexpr uint32_t period{3000};
     TEST_MESSAGE("Measure voltage on CS-SDCard");
-    gpio::enableGpio(gpio::group::spiSensor);
+    gpio::enableGpio(gpio::group::spiMemory);
     for (uint32_t loops = 0; loops < 16; loops++) {
-        HAL_GPIO_TogglePin(CS_BME688_GPIO_Port, CS_BME688_Pin);
+        HAL_GPIO_TogglePin(CS_SDCARD_GPIO_Port, CS_SDCARD_Pin);
         HAL_Delay(period);
     }
 }

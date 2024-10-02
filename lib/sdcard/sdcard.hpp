@@ -1,8 +1,8 @@
 #pragma once
 
 class sdCard {
-public:
+  public:
     static bool isPresent() {
-        return true;
+        return (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3) == GPIO_PIN_RESET);
     }
 };
