@@ -4,7 +4,6 @@
 
 #ifdef TARGET_TEST_PORT_UART1
 extern UART_HandleTypeDef huart1;
-void MX_USART1_UART_Init(void);
 void unityOutputStart() {
     uart1::initialize();
 }

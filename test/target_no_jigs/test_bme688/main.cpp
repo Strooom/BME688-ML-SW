@@ -4,8 +4,7 @@
 #include <stm32l4xx_hal_msp.c>
 #include <stm32l4xx_it.c>
 #include <gpio.hpp>
-#include <uart1.hpp>        // UART1 is used as test output
-#include <i2c3.hpp>         // on the BME688-ML-V1-PCB, the two BME688 sensors are connected to I2C3
+#include <i2c3.hpp>        // on the BME688-ML-V1-PCB, the two BME688 sensors are connected to I2C3
 #include <bme688.hpp>
 
 I2C_HandleTypeDef hi2c3;
@@ -14,7 +13,6 @@ UART_HandleTypeDef huart1;
 I2C_HandleTypeDef hi2c1;
 LPTIM_HandleTypeDef hlptim1;
 SPI_HandleTypeDef hspi1;
-
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -35,7 +33,6 @@ int main(int argc, char** argv) {
     SystemClock_Config();
     __enable_irq();
     HAL_Delay(2000);
-    uart1::wakeUp();
     i2c3::wakeUp();
     UNITY_BEGIN();
     RUN_TEST(test_bme68x_presence_0);

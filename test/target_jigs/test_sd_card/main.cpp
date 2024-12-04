@@ -1,29 +1,27 @@
 #include <unity.h>
 #include "main.h"
 #include <cube.hpp>
-#include <gpio.hpp>
-#include <sdcard.hpp>
 #include <stm32l4xx_hal_msp.c>
 #include <stm32l4xx_it.c>
+#include <gpio.hpp>
+#include <sdcard.hpp>
 
-void setUp(void) {
-}
-void tearDown(void) {
-}
+I2C_HandleTypeDef hi2c3;
+UART_HandleTypeDef huart1;
 
-void test_cs_sdcard() {
-    static constexpr uint32_t period{3000};
-    TEST_MESSAGE("Measure voltage on CS-SDCard");
-    gpio::enableGpio(gpio::group::spiSdCard);
-    for (uint32_t loops = 0; loops < 16; loops++) {
-        HAL_GPIO_TogglePin(CS_SDCARD_GPIO_Port, CS_SDCARD_Pin);
-        HAL_Delay(period);
-    }
+I2C_HandleTypeDef hi2c1;
+LPTIM_HandleTypeDef hlptim1;
+SPI_HandleTypeDef hspi1;
+
+void setUp(void) {}
+void tearDown(void) {}
+
+void dummy_test_message() {
+    TEST_IGNORE_MESSAGE("Card detect test - Insert, then remove card, then insert again");
 }
 
 void test_card_detect() {
     static constexpr uint32_t testTimeOut{5000};
-    TEST_MESSAGE("Card detect test - Insert, then remove card, then insert again");
     gpio::enableGpio(gpio::group::spiSdCard);
 
     TEST_ASSERT_FALSE_MESSAGE(sdCard::isPresent(), "Card detected at test start");
@@ -53,12 +51,17 @@ void test_card_detect() {
     TEST_ASSERT_TRUE_MESSAGE(sdCard::isPresent(), "Card detection timeout");
 }
 
+void test_read_write() {
+    TEST_IGNORE_MESSAGE("Test not implemented yet");
+}
+
 int main(int argc, char** argv) {
     HAL_Init();
     HAL_Delay(2000);
     SystemClock_Config();
     UNITY_BEGIN();
-    RUN_TEST(test_cs_sdcard);
+    RUN_TEST(dummy_test_message);
     RUN_TEST(test_card_detect);
+    RUN_TEST(test_read_write);
     UNITY_END();
 }
