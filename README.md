@@ -6,6 +6,7 @@
 
 # Firmware for the BME688-ML PCB
 
-This repository will hold the firmware for a MachineLearning application with the BME688 sensor
+This repository will hold the firmware for a MachineLearning application with the BME688 sensor.
+
 The hardware can be found here : https://github.com/Strooom/BME688-ML-V1-PCB
 

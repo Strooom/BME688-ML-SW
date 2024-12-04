@@ -11,10 +11,9 @@ class gpio {
     gpio() = delete;
     enum class group : uint32_t {
         none = 0,
-        spiSensor,
-        spiMemory,
-        spi,
-        i2c,
+        spiSdCard,
+        i2c1,
+        i2c3,
         debugPort,
         uart1
     };

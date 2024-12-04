@@ -3,31 +3,33 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#include <spi.hpp>
+#include <i2c1.hpp>
 #include <gpio.hpp>
 
 #ifndef generic
 #include "main.h"
-extern SPI_HandleTypeDef hspi1;
-void MX_SPI1_Init(void);
+extern I2C_HandleTypeDef hi2c1;
+void MX_I2C1_Init(void);
 #endif
 
-bool spi::initialized{false};
+bool i2c1::initalized{false};
 
-void spi::wakeUp() {
-    if (!initialized) {
+void i2c1::wakeUp() {
+    if (!initalized) {
 #ifndef generic
-        MX_SPI1_Init();
+        MX_I2C1_Init();
 #endif
-        initialized = true;
+        gpio::enableGpio(gpio::group::i2c1);
+        initalized = true;
     }
 }
 
-void spi::goSleep() {
-    if (initialized) {
+void i2c1::goSleep() {
+    if (initalized) {
 #ifndef generic
-        HAL_SPI_DeInit(&hspi1);
+        HAL_I2C_DeInit(&hi2c1);
 #endif
-        initialized = false;
+        gpio::disableGpio(gpio::group::i2c1);
+        initalized = false;
     }
 }

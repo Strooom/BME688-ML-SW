@@ -13,3 +13,6 @@ https://controllerstech.com/sd-card-using-spi-in-stm32/
 
 4.
 C:\Users\pasca\.platformio\packages\framework-stm32cubel4\Drivers\BSP\Adafruit_Shield
+
+5.
+https://goughlui.com/2021/02/27/experiment-microsd-card-power-consumption-spi-performance/

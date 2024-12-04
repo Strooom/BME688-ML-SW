@@ -5,15 +5,15 @@
 
 #include <stdint.h>
 
-class spi {
+class i2c1 {
   public:
     static void wakeUp();
     static void goSleep();
-    static bool isInitialized() { return initialized; }
+    static bool isInitialized() { return initalized; }  
 
 #ifndef unitTesting
 
   private:
 #endif
-    static bool initialized;
+    static bool initalized;
 };
