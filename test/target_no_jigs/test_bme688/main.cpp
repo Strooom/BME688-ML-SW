@@ -31,11 +31,9 @@ void test_bme68x_presence_1() {
 int main(int argc, char** argv) {
     HAL_Init();
     SystemClock_Config();
-    __enable_irq();
     HAL_Delay(2000);
     i2c3::wakeUp();
     UNITY_BEGIN();
     RUN_TEST(test_bme68x_presence_0);
     RUN_TEST(test_bme68x_presence_1);
-    UNITY_END();
-}
+    UNITY_END();}

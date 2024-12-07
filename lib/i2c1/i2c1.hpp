@@ -16,4 +16,5 @@ class i2c1 {
   private:
 #endif
     static bool initalized;
+    static void initialize();
 };
