@@ -6,14 +6,23 @@
 #include <logging.hpp>
 #include <version.hpp>
 
-#include <bbsec2.h>
+#include <../lib/stm32l4_example/bsec_integration.h>
+#include <../lib/stm32l4_example/common.h>
 
+// mode
+#include <../lib/stm32l4_example/bme68x.h>
+#include <../lib/stm32l4_example/common.h>
+#include <../lib/stm32l4_example/mode.h>
 
-I2C_HandleTypeDef hi2c1;
-I2C_HandleTypeDef hi2c3;
-LPTIM_HandleTypeDef hlptim1;
-SPI_HandleTypeDef hspi1;
-UART_HandleTypeDef huart1;
+// IAQ
+#include <../lib/stm32l4_example/bsec_integration.h>
+#include <../lib/stm32l4_example/bsec_iot_example.h>
+
+I2C_HandleTypeDef hi2c1;            // I2C1 = communication with mother board = MuMo
+I2C_HandleTypeDef hi2c3;            // I2C3 = communication with BME688 sensors
+LPTIM_HandleTypeDef hlptim1;        // low power internal timing
+SPI_HandleTypeDef hspi1;            // SPI = towards SD card
+UART_HandleTypeDef huart1;          // UART1 = communication with debug console
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -39,6 +48,37 @@ int main(void) {
     logging::enable(logging::destination::debugProbe);
     logging::enable(logging::destination::uart1);
     logging::snprintf("Hello World!\n");
+
+    return_values_init ret;
+    struct bme68x_dev bme_dev;
+    memset(&bme_dev, 0, sizeof(bme_dev));
+
+    bme68x_interface_init(&bme_dev);
+
+#if defined(BME68X_OUTPUT_GAS_ESTIMATE)
+    ret = bsec_iot_init(BSEC_SAMPLE_RATE_SCAN, 0.0f, bus_write, bus_read, bst_delay_us, state_load, config_load, bme_dev);
+#elif defined(BME68X_OUTPUT_GAS_IAQ)
+    ret = bsec_iot_init(BSEC_SAMPLE_RATE_LP, 0.0f, bus_write, bus_read, bst_delay_us, state_load, config_load, bme_dev);
+#endif
+
+    if (ret.bme68x_status) {
+        /* Could not intialize BME68x */
+        printf("Could not intialize BSEC library, bme688_status=%d\r\n", ret.bme68x_status);
+
+    } else if (ret.bsec_status) {
+        /* Could not intialize BSEC library */
+        printf("Could not intialize BSEC library, bsec_status=%d\r\n", ret.bsec_status);
+    }
+
+#if defined(BME68X_OUTPUT_GAS_ESTIMATE)
+    printf("timestamp, gas_estimate_1, gas_estimate_2, gas_estimate_3, gas_estimate_4, raw_pressure, raw_temp, raw_humidity, raw_gas, raw_gas_index, bsec_status\r\n");
+    bsec_iot_loop(bst_delay_us, get_timestamp_us, output_ready, state_save, 10);
+#elif defined(BME68X_OUTPUT_GAS_IAQ)
+    printf("timestamp, IAQ, IAQ_accuracy, static_IAQ, co2_equivalent, breath_voc_equivalent, raw_pressure, raw_temp, raw_humidity, raw_gas, raw_gas_index, bsec_status\r\n");
+    bsec_iot_loop(bst_delay_us, get_timestamp_us, output_iaq_ready, state_save, 1000);
+#endif
+
+    return 0;
 
     while (true) {
     }
@@ -323,10 +363,15 @@ void Error_Handler(void) {
  * @param  line: assert_param error line source number
  * @retval None
  */
-void assert_failed(uint8_t* file, uint32_t line) {
+void assert_failed(uint8_t *file, uint32_t line) {
     /* USER CODE BEGIN 6 */
     /* User can add his own implementation to report the file name and line number,
        ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
+int fputc(int c, FILE *stream) {
+    HAL_UART_Transmit(&huart1, (unsigned char *)&c, 1, 1000);
+    return 1;
+}
