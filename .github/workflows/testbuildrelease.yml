@@ -234,7 +234,8 @@ jobs:
          sonar-scanner \
             --define sonar.projectKey=Strooom_BME688-ML-v1-SW \
             --define sonar.organization=strooom-1 \
-            --define sonar.coverageReportPaths=coverage.xml
+            --define sonar.coverageReportPaths=coverage.xml \
+            -X
             
       - name: Attach Binary to Workflow run
         id: attachbinarytoworkflowrun
