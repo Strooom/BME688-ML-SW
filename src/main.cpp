@@ -8,13 +8,15 @@
 #include <i2c3.hpp>
 #include <delay.hpp>
 #include <logging.hpp>
+#include <float.hpp>
 #include <version.hpp>
 
 #include <bme68x_defs.h>
 #include <bme68x.h>
+#include <bsec_interface.h>
+
 #include <stm32l4xx_hal_msp.c>
 #include <stm32l4xx_it.c>
-
 
 I2C_HandleTypeDef hi2c1;            // I2C1 = communication with mother board = MuMo
 I2C_HandleTypeDef hi2c3;            // I2C3 = communication with BME688 sensors
@@ -29,7 +31,6 @@ static void MX_LPTIM1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
 
-
 int main(void) {
     HAL_Init();
     SystemClock_Config();
@@ -41,7 +42,6 @@ int main(void) {
     MX_LPTIM1_Init();
     MX_SPI1_Init();
     MX_FATFS_Init();
-    
 
     gpio::enableClocks();
     uart1::wakeUp();
@@ -70,14 +70,54 @@ int main(void) {
 
     int8_t initResult;
     initResult = bme68x_init(&sensor0);
-    logging::snprintf("BME68X chip ID=0x%02x\n", sensor0.chip_id);
     initResult = bme68x_init(&sensor1);
-    logging::snprintf("BME68X chip ID=0x%02x\n", sensor1.chip_id);
 
+    #define NUM_OF_SENS 2
+    uint8_t *bsecInstance[NUM_OF_SENS];
+    bsec_version_t bsecVersion;
+    bsec_library_return_t getVersionResult;
+    getVersionResult = bsec_get_version(bsecInstance, &bsecVersion);
+    logging::snprintf("Version = %d.%d.%d.%d\n", bsecVersion.major, bsecVersion.minor, bsecVersion.major_bugfix, bsecVersion.minor_bugfix);
+
+    // struct bme68x_conf config0;
+    // struct bme68x_heatr_conf heaterConfig0;
+    // struct bme68x_data data;
+
+    // config0.filter  = BME68X_FILTER_OFF;
+    // config0.odr     = BME68X_ODR_NONE;
+    // config0.os_hum  = BME68X_OS_16X;
+    // config0.os_pres = BME68X_OS_1X;
+    // config0.os_temp = BME68X_OS_2X;
+
+    // int8_t configResult;
+    // configResult = bme68x_set_conf(&config0, &sensor0);
+
+    // heaterConfig0.enable     = BME68X_ENABLE;
+    // heaterConfig0.heatr_temp = 300;
+    // heaterConfig0.heatr_dur  = 100;
+
+    // int8_t heaterConfigResult;
+    // heaterConfigResult = bme68x_set_heatr_conf(BME68X_FORCED_MODE, &heaterConfig0, &sensor0);
+
+    // uint16_t sample_count{0};
     while (true) {
+        // int8_t setModeResult;
+        // setModeResult = bme68x_set_op_mode(BME68X_FORCED_MODE, &sensor0);
+
+        // uint32_t del_period = bme68x_get_meas_dur(BME68X_FORCED_MODE, &config0, &sensor0) + (heaterConfig0.heatr_dur * 1000);
+        // sensor0.delay_us(del_period, sensor0.intf_ptr);
+
+        // uint8_t n_fields;
+        // int8_t getDataResult = bme68x_get_data(BME68X_FORCED_MODE, &data, &n_fields, &sensor0);
+
+        // if (n_fields) {
+        //     logging::snprintf("%03u : %d.%02d C, %d.%01d %%, %d hPa\n", sample_count, integerPart(data.temperature, 2), fractionalPart(data.temperature, 2), integerPart(data.humidity, 1), fractionalPart(data.humidity, 1), integerPart(data.pressure / 100.0F, 0));
+        //     // logging::snprintf("%u, %d, %lu, %lu, %lu, 0x%x\n", sample_count, (data.temperature / 100), (long unsigned int)data.pressure, (long unsigned int)(data.humidity / 1000), (long unsigned int)data.gas_resistance, data.status);
+        // }
+        // HAL_Delay(1000);
+        // sample_count++;
     }
 }
-
 
 /**
  * @brief I2C1 Initialization Function
