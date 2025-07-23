@@ -233,7 +233,7 @@ jobs:
         run: |
          sonar-scanner \
             --define sonar.projectKey=Strooom_BME688-ML-v1-SW \
-            --define sonar.organization=strooom-1 \
+            --define sonar.organization=strooom \
             --define sonar.coverageReportPaths=coverage.xml \
             -X
             
