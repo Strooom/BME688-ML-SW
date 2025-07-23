@@ -57,15 +57,13 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define CS_BME688_Pin GPIO_PIN_0
-#define CS_BME688_GPIO_Port GPIOA
 #define CS_SDCARD_Pin GPIO_PIN_2
 #define CS_SDCARD_GPIO_Port GPIOA
 #define cardDetect_Pin GPIO_PIN_3
 #define cardDetect_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-
+#define SD_SPI_HANDLE hspi1
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

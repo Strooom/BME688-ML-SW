@@ -25,7 +25,7 @@
   "name": "BME688-ML-V1-PCB",
   "upload": {
     "maximum_ram_size": 65536,
-    "maximum_size": 262144,
+    "maximum_size": 131072,
     "protocol": "stlink",
     "protocols": [
       "stlink",

@@ -218,13 +218,13 @@ jobs:
         run: |
           pio run -t compiledb
 
-      - name: Build
-        run: |
-          pio run -e production
+      # - name: Build
+      #   run: |
+      #     pio run -e production
 
       - name: Collect coverage into XML report
         run: |
-          gcovr --sonarqube > coverage.xml
+          gcovr --sonarqube --gcov-ignore-parse-errors > coverage.xml
 
       - name: Run sonar-scanner
         env:
@@ -232,39 +232,38 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
          sonar-scanner \
-            --define sonar.projectKey=Strooom_BME688-ML-v1-SW \
-            --define sonar.organization=strooom-1 \
-            --define sonar.coverageReportPaths=coverage.xml \
-            -X
+            --define sonar.projectKey=strooom_bme68x-ml-sw \
+            --define sonar.organization=strooom \
+            --define sonar.coverageReportPaths=coverage.xml
+            
+      # - name: Attach Binary to Workflow run
+      #   id: attachbinarytoworkflowrun
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
+      #     path: .pio/build/production/firmware.bin
+      #     if-no-files-found: error
 
-      - name: Attach Binary to Workflow run
-        id: attachbinarytoworkflowrun
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
-          path: .pio/build/production/firmware.bin
-          if-no-files-found: error
+      # - name: Release when on main branch
+      #   id: createrelease
+      #   uses: actions/create-release@v1
+      #   if: ${{ steps.versioninfo.outputs.branchname == 'main'}}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ steps.selectversion.outputs.buildversion }}
+      #     release_name: Release ${{ steps.selectversion.outputs.buildversion }}
+      #     draft: false
+      #     prerelease: false
 
-      - name: Release when on main branch
-        id: createrelease
-        uses: actions/create-release@v1
-        if: ${{ steps.versioninfo.outputs.branchname == 'main'}}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.selectversion.outputs.buildversion }}
-          release_name: Release ${{ steps.selectversion.outputs.buildversion }}
-          draft: false
-          prerelease: false
-
-      - name: Attach Binary to Release
-        id: attachbinarytorelease
-        uses: actions/upload-release-asset@v1
-        if: ${{ steps.versioninfo.outputs.branchname == 'main'}}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.createrelease.outputs.upload_url }}
-          asset_path: .pio/build/production/firmware.bin
-          asset_name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
-          asset_content_type: application/octet-stream
+      # - name: Attach Binary to Release
+      #   id: attachbinarytorelease
+      #   uses: actions/upload-release-asset@v1
+      #   if: ${{ steps.versioninfo.outputs.branchname == 'main'}}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.createrelease.outputs.upload_url }}
+      #     asset_path: .pio/build/production/firmware.bin
+      #     asset_name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
+      #     asset_content_type: application/octet-stream

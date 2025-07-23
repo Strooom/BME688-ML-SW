@@ -55,6 +55,10 @@ firmware.elf
 *.lai
 *.la
 *.a
+!lib/bsec3210/algo/bsec_IAQ/bin/gcc/Cortex_M4F/libalgobsec.a
+!lib/bsec3210/algo/bsec_IAQ_Sel/bin/gcc/Cortex_M4F/libalgobsec.a
+
+
 
 # #############################
 # ### STM32CubeIDE          ###
