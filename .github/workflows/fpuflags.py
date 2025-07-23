@@ -1,7 +1,6 @@
 Import("env")
-Import("projenv")
 
-for e in [env, projenv, DefaultEnvironment()]:
+for e in [env, DefaultEnvironment()]:
     e.Append(
     CCFLAGS=[
         "-mfloat-abi=hard",
