@@ -1,22 +1,20 @@
-#include "main.h"
-#include "fatfs.h"
+#include <main.h>
+#include <clock.hpp>
+#include <fatfs.h>
 #include <stdio.h>
 #include <string.h>
 #include <gpio.hpp>
+#include <uart1.hpp>
+#include <i2c3.hpp>
+#include <delay.hpp>
 #include <logging.hpp>
 #include <version.hpp>
 
-#include <../lib/stm32l4_example/bsec_integration.h>
-#include <../lib/stm32l4_example/common.h>
+#include <bme68x_defs.h>
+#include <bme68x.h>
+#include <stm32l4xx_hal_msp.c>
+#include <stm32l4xx_it.c>
 
-// mode
-#include <../lib/stm32l4_example/bme68x.h>
-#include <../lib/stm32l4_example/common.h>
-#include <../lib/stm32l4_example/mode.h>
-
-// IAQ
-#include <../lib/stm32l4_example/bsec_integration.h>
-#include <../lib/stm32l4_example/bsec_iot_example.h>
 
 I2C_HandleTypeDef hi2c1;            // I2C1 = communication with mother board = MuMo
 I2C_HandleTypeDef hi2c3;            // I2C3 = communication with BME688 sensors
@@ -24,104 +22,62 @@ LPTIM_HandleTypeDef hlptim1;        // low power internal timing
 SPI_HandleTypeDef hspi1;            // SPI = towards SD card
 UART_HandleTypeDef huart1;          // UART1 = communication with debug console
 
-void SystemClock_Config(void);
+// void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_LPTIM1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
-static void MX_I2C3_Init(void);
+
 
 int main(void) {
     HAL_Init();
     SystemClock_Config();
+
+    // HAL_Delay(8000);        // give the debugger time to connect
+
     MX_GPIO_Init();
     MX_I2C1_Init();
     MX_LPTIM1_Init();
     MX_SPI1_Init();
-    MX_USART1_UART_Init();
     MX_FATFS_Init();
-    MX_I2C3_Init();
+    
 
-    HAL_Delay(1000);
-    gpio::enableGpio(gpio::group::uart1);
-    logging::enable(logging::destination::debugProbe);
+    gpio::enableClocks();
+    uart1::wakeUp();
     logging::enable(logging::destination::uart1);
-    logging::snprintf("Hello World!\n");
+    i2c3::wakeUp();
 
-    return_values_init ret;
-    struct bme68x_dev bme_dev;
-    memset(&bme_dev, 0, sizeof(bme_dev));
+    struct bme68x_dev sensor0;
+    memset(&sensor0, 0, sizeof(sensor0));
+    uint8_t sensor0I2cAddress = BME68X_I2C_ADDR_LOW;
+    sensor0.intf              = BME68X_I2C_INTF;
+    sensor0.read              = i2c3::read;
+    sensor0.write             = i2c3::write;
+    sensor0.delay_us          = delay_us;
+    sensor0.intf_ptr          = &sensor0I2cAddress;
+    sensor0.amb_temp          = 22;
 
-    bme68x_interface_init(&bme_dev);
+    struct bme68x_dev sensor1;
+    memset(&sensor1, 0, sizeof(sensor1));
+    uint8_t sensor1I2cAddress = BME68X_I2C_ADDR_HIGH;
+    sensor1.intf              = BME68X_I2C_INTF;
+    sensor1.read              = i2c3::read;
+    sensor1.write             = i2c3::write;
+    sensor1.delay_us          = delay_us;
+    sensor1.intf_ptr          = &sensor1I2cAddress;
+    sensor1.amb_temp          = 22;
 
-#if defined(BME68X_OUTPUT_GAS_ESTIMATE)
-    ret = bsec_iot_init(BSEC_SAMPLE_RATE_SCAN, 0.0f, bus_write, bus_read, bst_delay_us, state_load, config_load, bme_dev);
-#elif defined(BME68X_OUTPUT_GAS_IAQ)
-    ret = bsec_iot_init(BSEC_SAMPLE_RATE_LP, 0.0f, bus_write, bus_read, bst_delay_us, state_load, config_load, bme_dev);
-#endif
-
-    if (ret.bme68x_status) {
-        /* Could not intialize BME68x */
-        printf("Could not intialize BSEC library, bme688_status=%d\r\n", ret.bme68x_status);
-
-    } else if (ret.bsec_status) {
-        /* Could not intialize BSEC library */
-        printf("Could not intialize BSEC library, bsec_status=%d\r\n", ret.bsec_status);
-    }
-
-#if defined(BME68X_OUTPUT_GAS_ESTIMATE)
-    printf("timestamp, gas_estimate_1, gas_estimate_2, gas_estimate_3, gas_estimate_4, raw_pressure, raw_temp, raw_humidity, raw_gas, raw_gas_index, bsec_status\r\n");
-    bsec_iot_loop(bst_delay_us, get_timestamp_us, output_ready, state_save, 10);
-#elif defined(BME68X_OUTPUT_GAS_IAQ)
-    printf("timestamp, IAQ, IAQ_accuracy, static_IAQ, co2_equivalent, breath_voc_equivalent, raw_pressure, raw_temp, raw_humidity, raw_gas, raw_gas_index, bsec_status\r\n");
-    bsec_iot_loop(bst_delay_us, get_timestamp_us, output_iaq_ready, state_save, 1000);
-#endif
-
-    return 0;
+    int8_t initResult;
+    initResult = bme68x_init(&sensor0);
+    logging::snprintf("BME68X chip ID=0x%02x\n", sensor0.chip_id);
+    initResult = bme68x_init(&sensor1);
+    logging::snprintf("BME68X chip ID=0x%02x\n", sensor1.chip_id);
 
     while (true) {
     }
 }
 
-/**
- * @brief System Clock Configuration
- * @retval None
- */
-void SystemClock_Config(void) {
-    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-
-    /** Configure the main internal regulator output voltage
-     */
-    if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK) {
-        Error_Handler();
-    }
-
-    /** Initializes the RCC Oscillators according to the specified parameters
-     * in the RCC_OscInitTypeDef structure.
-     */
-    RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_MSI;
-    RCC_OscInitStruct.MSIState            = RCC_MSI_ON;
-    RCC_OscInitStruct.MSICalibrationValue = 0;
-    RCC_OscInitStruct.MSIClockRange       = RCC_MSIRANGE_10;
-    RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_NONE;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-        Error_Handler();
-    }
-
-    /** Initializes the CPU, AHB and APB buses clocks
-     */
-    RCC_ClkInitStruct.ClockType      = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-    RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_MSI;
-    RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) {
-        Error_Handler();
-    }
-}
 
 /**
  * @brief I2C1 Initialization Function
@@ -170,42 +126,42 @@ static void MX_I2C1_Init(void) {
  * @param None
  * @retval None
  */
-static void MX_I2C3_Init(void) {
-    /* USER CODE BEGIN I2C3_Init 0 */
+// static void MX_I2C3_Init(void) {
+//     /* USER CODE BEGIN I2C3_Init 0 */
 
-    /* USER CODE END I2C3_Init 0 */
+//     /* USER CODE END I2C3_Init 0 */
 
-    /* USER CODE BEGIN I2C3_Init 1 */
+//     /* USER CODE BEGIN I2C3_Init 1 */
 
-    /* USER CODE END I2C3_Init 1 */
-    hi2c3.Instance              = I2C3;
-    hi2c3.Init.Timing           = 0x00B07CB4;
-    hi2c3.Init.OwnAddress1      = 0;
-    hi2c3.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
-    hi2c3.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
-    hi2c3.Init.OwnAddress2      = 0;
-    hi2c3.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-    hi2c3.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
-    hi2c3.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
-    if (HAL_I2C_Init(&hi2c3) != HAL_OK) {
-        Error_Handler();
-    }
+//     /* USER CODE END I2C3_Init 1 */
+//     hi2c3.Instance              = I2C3;
+//     hi2c3.Init.Timing           = 0x00B07CB4;
+//     hi2c3.Init.OwnAddress1      = 0;
+//     hi2c3.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
+//     hi2c3.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
+//     hi2c3.Init.OwnAddress2      = 0;
+//     hi2c3.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+//     hi2c3.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
+//     hi2c3.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
+//     if (HAL_I2C_Init(&hi2c3) != HAL_OK) {
+//         Error_Handler();
+//     }
 
-    /** Configure Analogue filter
-     */
-    if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
-        Error_Handler();
-    }
+//     /** Configure Analogue filter
+//      */
+//     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
+//         Error_Handler();
+//     }
 
-    /** Configure Digital filter
-     */
-    if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK) {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN I2C3_Init 2 */
+//     /** Configure Digital filter
+//      */
+//     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK) {
+//         Error_Handler();
+//     }
+//     /* USER CODE BEGIN I2C3_Init 2 */
 
-    /* USER CODE END I2C3_Init 2 */
-}
+//     /* USER CODE END I2C3_Init 2 */
+// }
 
 /**
  * @brief LPTIM1 Initialization Function
@@ -278,31 +234,31 @@ static void MX_SPI1_Init(void) {
  * @param None
  * @retval None
  */
-static void MX_USART1_UART_Init(void) {
-    /* USER CODE BEGIN USART1_Init 0 */
+// static void MX_USART1_UART_Init(void) {
+//     /* USER CODE BEGIN USART1_Init 0 */
 
-    /* USER CODE END USART1_Init 0 */
+//     /* USER CODE END USART1_Init 0 */
 
-    /* USER CODE BEGIN USART1_Init 1 */
+//     /* USER CODE BEGIN USART1_Init 1 */
 
-    /* USER CODE END USART1_Init 1 */
-    huart1.Instance                    = USART1;
-    huart1.Init.BaudRate               = 115200;
-    huart1.Init.WordLength             = UART_WORDLENGTH_8B;
-    huart1.Init.StopBits               = UART_STOPBITS_1;
-    huart1.Init.Parity                 = UART_PARITY_NONE;
-    huart1.Init.Mode                   = UART_MODE_TX_RX;
-    huart1.Init.HwFlowCtl              = UART_HWCONTROL_NONE;
-    huart1.Init.OverSampling           = UART_OVERSAMPLING_16;
-    huart1.Init.OneBitSampling         = UART_ONE_BIT_SAMPLE_DISABLE;
-    huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-    if (HAL_UART_Init(&huart1) != HAL_OK) {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN USART1_Init 2 */
+//     /* USER CODE END USART1_Init 1 */
+//     huart1.Instance                    = USART1;
+//     huart1.Init.BaudRate               = 115200;
+//     huart1.Init.WordLength             = UART_WORDLENGTH_8B;
+//     huart1.Init.StopBits               = UART_STOPBITS_1;
+//     huart1.Init.Parity                 = UART_PARITY_NONE;
+//     huart1.Init.Mode                   = UART_MODE_TX_RX;
+//     huart1.Init.HwFlowCtl              = UART_HWCONTROL_NONE;
+//     huart1.Init.OverSampling           = UART_OVERSAMPLING_16;
+//     huart1.Init.OneBitSampling         = UART_ONE_BIT_SAMPLE_DISABLE;
+//     huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+//     if (HAL_UART_Init(&huart1) != HAL_OK) {
+//         Error_Handler();
+//     }
+//     /* USER CODE BEGIN USART1_Init 2 */
 
-    /* USER CODE END USART1_Init 2 */
-}
+//     /* USER CODE END USART1_Init 2 */
+// }
 
 /**
  * @brief GPIO Initialization Function

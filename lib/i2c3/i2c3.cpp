@@ -55,3 +55,34 @@ void i2c3::initialize() {
         Error_Handler();
     }
 }
+
+BME68X_INTF_RET_TYPE i2c3::read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr) {
+    uint8_t device_addr = *(uint8_t *)intf_ptr;
+    HAL_StatusTypeDef status;
+    (void)intf_ptr;
+
+    status = HAL_I2C_Mem_Read(&hi2c3, device_addr << 1, reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t *)reg_data, len, HAL_MAX_DELAY);
+
+    if (status == HAL_OK) {
+        return BME68X_INTF_RET_SUCCESS; // TODO : strange, both success and fail return 0
+    } else {
+        return 0;
+    }
+}
+
+
+BME68X_INTF_RET_TYPE i2c3::write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr)
+{
+    uint8_t device_addr = *(uint8_t*)intf_ptr;
+    HAL_StatusTypeDef status;
+    (void)intf_ptr;
+    
+    status = HAL_I2C_Mem_Write(&hi2c3, device_addr << 1, reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t*)reg_data, len, HAL_MAX_DELAY);
+
+    if (status == HAL_OK) {
+        return BME68X_INTF_RET_SUCCESS;
+    } 
+    else{
+        return 0;
+    }   
+}

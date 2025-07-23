@@ -676,7 +676,7 @@ typedef BME68X_INTF_RET_TYPE (*bme68x_read_fptr_t)(uint8_t reg_addr, uint8_t *re
  * @retval Non-zero for Failure
  *
  */
-typedef BME68X_INTF_RET_TYPE (*bme68x_write_fptr_t)(uint8_t reg_addr,const  uint8_t *reg_data, uint32_t length,
+typedef BME68X_INTF_RET_TYPE (*bme68x_write_fptr_t)(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length,
                                                     void *intf_ptr);
 
 /*!

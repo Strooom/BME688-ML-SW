@@ -6,6 +6,16 @@
 
 #endif
 
+
+void gpio::enableClocks() {
+#ifndef generic
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+#endif
+}
+
+
 void gpio::enableGpio(group aGroup) {
     enableDisableGpio(aGroup, true);
 }

@@ -18,6 +18,7 @@ class gpio {
         uart1
     };
 
+    static void enableClocks();
     static void enableGpio(group aGroup);
     static void disableGpio(group aGroup);
     static void disableAllGpio();
