@@ -6,7 +6,6 @@
 
 #endif
 
-
 void gpio::enableClocks() {
 #ifndef generic
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -14,7 +13,6 @@ void gpio::enableClocks() {
     __HAL_RCC_GPIOC_CLK_ENABLE();
 #endif
 }
-
 
 void gpio::enableGpio(group aGroup) {
     enableDisableGpio(aGroup, true);
@@ -34,9 +32,7 @@ void gpio::disableAllGpio() {
 
 void gpio::enableDisableGpio(group theGroup, bool enable) {
 #ifndef generic
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
+    enableClocks();
 
     switch (theGroup) {
         case gpio::group::spiSdCard:
