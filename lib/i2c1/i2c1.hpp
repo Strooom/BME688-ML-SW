@@ -3,7 +3,7 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#include <stdint.h>
+#include <cstdint>
 
 class i2c1 {
   public:

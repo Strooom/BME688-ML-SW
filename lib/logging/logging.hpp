@@ -4,8 +4,8 @@
 // ######################################################################################
 
 #pragma once
-#include <stdint.h>
-#include <stdarg.h>        // required so we can define functions with variable number of arguments
+#include <cstdint>
+#include <cstdarg>        // required so we can define functions with variable number of arguments
 
 class logging {
   public:

@@ -3,7 +3,7 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#include <stdint.h>
+#include <cstdint>
 #include <bme68x_defs.h>        // needed as return type for board/MCU-specific functions for reading and writing to the BME68x sensor
 
 class i2c3 {

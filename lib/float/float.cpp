@@ -1,7 +1,6 @@
+#include <float.hpp>
 #include <cmath>
 #include <cstring>
-#include <inttypes.h>
-#include <float.hpp>
 
 int32_t integerPart(const float value, const uint32_t decimals) {
     return static_cast<int32_t>(roundf(value * factorFloat(decimals))) / static_cast<int32_t>(factorInt(decimals));

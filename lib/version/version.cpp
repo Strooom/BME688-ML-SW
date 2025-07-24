@@ -1,6 +1,6 @@
 #include "version.hpp"
 #include "buildinfo.hpp"
-#include <stdio.h>
+#include <cstdio>
 #include <logging.hpp>
 
 uint8_t version::isVersionMajor{0};

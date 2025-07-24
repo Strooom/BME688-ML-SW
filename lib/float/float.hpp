@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 int32_t integerPart(const float value, const uint32_t decimals);
 uint32_t fractionalPart(const float value, const uint32_t decimals);

@@ -1,7 +1,7 @@
 #include <main.h>
 #include <stm32l4xx_hal_msp.c>
 #include <stm32l4xx_it.c>
-#include <string.h>
+#include <cstring>
 #include <clock.hpp>
 #include <gpio.hpp>
 #include <uart1.hpp>

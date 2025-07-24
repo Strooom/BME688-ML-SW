@@ -1,8 +1,8 @@
 #include <main.h>
 #include <clock.hpp>
 #include <fatfs.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <gpio.hpp>
 #include <uart1.hpp>
 #include <i2c3.hpp>
