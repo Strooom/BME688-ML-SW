@@ -1,10 +1,10 @@
 version = 1
 
 exclude_patterns = [
-  "lib/bme68x/*",
-  "lib/bsec3210/*",
-  "lib/cube/*",
-  "lib/fat/*"
+  "lib/bme68x/**",
+  "lib/bsec3210/**",
+  "lib/cube/**",
+  "lib/fat/**"
 ]
 
 [[analyzers]]
