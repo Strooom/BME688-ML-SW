@@ -56,7 +56,7 @@
 
 /* External variables --------------------------------------------------------*/
 extern I2C_HandleTypeDef hi2c1;
-extern LPTIM_HandleTypeDef hlptim1;
+LPTIM_HandleTypeDef hlptim1;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */

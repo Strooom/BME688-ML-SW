@@ -5,6 +5,7 @@
 #include <cstring>
 #include <gpio.hpp>
 #include <uart1.hpp>
+#include <i2c1.hpp>
 #include <i2c3.hpp>
 #include <delay.hpp>
 #include <logging.hpp>
@@ -18,11 +19,11 @@
 #include <stm32l4xx_hal_msp.c>
 #include <stm32l4xx_it.c>
 
-I2C_HandleTypeDef hi2c1;            // I2C1 = communication with mother board = MuMo
-I2C_HandleTypeDef hi2c3;            // I2C3 = communication with BME688 sensors
-LPTIM_HandleTypeDef hlptim1;        // low power internal timing
+// I2C_HandleTypeDef hi2c1;            // I2C1 = communication with mother board = MuMo
+// I2C_HandleTypeDef hi2c3;            // I2C3 = communication with BME688 sensors
+// LPTIM_HandleTypeDef hlptim1;        // low power internal timing
 SPI_HandleTypeDef hspi1;            // SPI = towards SD card
-UART_HandleTypeDef huart1;          // UART1 = communication with debug console
+// UART_HandleTypeDef huart1;          // UART1 = communication with debug console
 
 // void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -367,7 +368,3 @@ void assert_failed(uint8_t *file, uint32_t line) {
 }
 #endif /* USE_FULL_ASSERT */
 
-int fputc(int c, FILE *stream) {
-    HAL_UART_Transmit(&huart1, (unsigned char *)&c, 1, 1000);
-    return 1;
-}

@@ -8,7 +8,7 @@
 
 #ifndef generic
 #include "main.h"
-extern UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart1;
 #endif
 
 bool uart1::initalized{false};

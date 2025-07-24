@@ -8,7 +8,7 @@
 
 #ifndef generic
 #include "main.h"
-extern I2C_HandleTypeDef hi2c3;
+I2C_HandleTypeDef hi2c3;
 #endif
 
 bool i2c3::initalized{false};
