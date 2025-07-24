@@ -4,7 +4,8 @@ exclude_patterns = [
   "lib/bme68x/**",
   "lib/bsec3210/**",
   "lib/cube/**",
-  "lib/fat/**"
+  "lib/fat/**",
+  "include/**"
 ]
 
 [[analyzers]]
