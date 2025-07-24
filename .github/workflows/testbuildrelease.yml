@@ -184,20 +184,6 @@ jobs:
           pip install --upgrade platformio
           pio pkg install --environment dummy
 
-      # - name: Install STM32CubeWL
-      #   uses: actions/checkout@v4
-      #   with:
-      #     repository: STMicroelectronics/STM32CubeWL
-      #     path: temp/framework-stm32cubewl
-      #     submodules: true
-
-      # - name: Add stm32wle to PlatformIO platforms
-      #   run: |
-      #     cp -f .github/workflows/platform.json /home/runner/.platformio/platforms/ststm32/platform.json
-      #     cp -r temp/framework-stm32cubewl /home/runner/.platformio/packages/framework-stm32cubewl
-      #     cp -f .github/workflows/package.json /home/runner/.platformio/packages/framework-stm32cubewl/package.json
-      #     cp /home/runner/.platformio/packages/framework-stm32cubewl/Utilities/misc/stm32_systime_if_template.h /home/runner/.platformio/packages/framework-stm32cubewl/Utilities/misc/stm32_systime_if.h
-
       - name: Check PlatformIO
         run: |
           pio system info
@@ -218,52 +204,7 @@ jobs:
         run: |
           pio run -t compiledb
 
+      # cloud build is currently not working...
       # - name: Build
       #   run: |
       #     pio run -e production
-
-      - name: Collect coverage into XML report
-        run: |
-          gcovr --sonarqube --gcov-ignore-parse-errors > coverage.xml
-
-      - name: Run sonar-scanner
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-         sonar-scanner \
-            --define sonar.projectKey=Strooom_BME688-ML-v1-SW \
-            --define sonar.organization=strooom \
-            --define sonar.coverageReportPaths=coverage.xml
-            
-      # - name: Attach Binary to Workflow run
-      #   id: attachbinarytoworkflowrun
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
-      #     path: .pio/build/production/firmware.bin
-      #     if-no-files-found: error
-
-      # - name: Release when on main branch
-      #   id: createrelease
-      #   uses: actions/create-release@v1
-      #   if: ${{ steps.versioninfo.outputs.branchname == 'main'}}
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: ${{ steps.selectversion.outputs.buildversion }}
-      #     release_name: Release ${{ steps.selectversion.outputs.buildversion }}
-      #     draft: false
-      #     prerelease: false
-
-      # - name: Attach Binary to Release
-      #   id: attachbinarytorelease
-      #   uses: actions/upload-release-asset@v1
-      #   if: ${{ steps.versioninfo.outputs.branchname == 'main'}}
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.createrelease.outputs.upload_url }}
-      #     asset_path: .pio/build/production/firmware.bin
-      #     asset_name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
-      #     asset_content_type: application/octet-stream
