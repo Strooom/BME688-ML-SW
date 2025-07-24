@@ -1,8 +1,7 @@
 ![workflow](https://github.com/strooom/BME688-ML-v1-SW/actions/workflows/testbuildrelease.yml/badge.svg)
-[![codecov](https://codecov.io/gh/Strooom/BME688-ML-v1-SW/branch/develop/graph/badge.svg?token=1YU44QFM6B)](https://codecov.io/gh/Strooom/BME688-ML-v1-SW)
+[![codecov](https://codecov.io/gh/Strooom/BME688-ML-SW/graph/badge.svg?token=1YU44QFM6B)](https://codecov.io/gh/Strooom/BME688-ML-SW)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-[![DeepSource](https://app.deepsource.com/gh/Strooom/BME688-ML-SW.svg/?label=active+issues&show_trend=true&token=zlNcnPfKz-hS2mY2oRJuvLvB)](https://app.deepsource.com/gh/Strooom/BME688-ML-SW/)
-[![DeepSource](https://app.deepsource.com/gh/Strooom/BME688-ML-SW.svg/?label=code+coverage&show_trend=true&token=zlNcnPfKz-hS2mY2oRJuvLvB)](https://app.deepsource.com/gh/Strooom/BME688-ML-SW/)
+[![DeepSource](https://app.deepsource.com/gh/Strooom/BME688-ML-SW.svg/?label=active+issues&show_trend=false&token=zlNcnPfKz-hS2mY2oRJuvLvB)](https://app.deepsource.com/gh/Strooom/BME688-ML-SW/)
 
 # Firmware for the BME688-ML PCB
 
