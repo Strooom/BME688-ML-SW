@@ -32,3 +32,18 @@ ret.bsec_status = bme68x_bsec_update_subscription(sample_rate);
 */.bmerawdata : JSON format, some contents can be interpreted by the labels in 'dataColumns'
 
 How to generate a correct .bmeconfig file for the https://github.com/Strooom/BME688-ML-V1-PCB board
+
+
+
+SELECTIVITY : all outputs
+IAQ : limited outputs resulting in smaller memory footprint
+
+scan mode : classification or regression estimates
+
+bsec_set_configuration()
+sel : classification outputs
+reg : regression outputs
+* 3.3v
+* LP = 3 seconds update rate
+* 4 days calibration
+--> bme688_sel_33v_3s_4d

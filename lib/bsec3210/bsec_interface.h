@@ -56,7 +56,7 @@
  * It is not allowed to deliver the source code of the Software to any third party without permission of
  * Bosch Sensortec.
  *
- * @file     bsec_interface.h  
+ * @file     bsec_interface.h
  *
  * @brief
  * Contains the multi-instance API for BSEC
@@ -69,34 +69,34 @@
 #include "bsec_datatypes.h"
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
- /*! @addtogroup bsec_lib_interface BSEC Interfaces
+/*! @addtogroup bsec_lib_interface BSEC Interfaces
  *  @brief The interface functions are used for interfacing one or more sensors with corresponding BSEC library instances.
  *
  * # Interface usage
- * 
+ *
  * The following provides a short overview on the typical operation sequence for BSEC.
- * 
+ *
  * - Initialization of the library
- * 
+ *
  * | Steps                                                               | Function                 |
  * |---------------------------------------------------------------------|--------------------------|
  * | Initialization of library                                           | bsec_init()              |
  * | Update configuration settings (optional)                            | bsec_set_configuration() |
  * | Restore the state of the library (optional)                         | bsec_set_state()         |
  *
- * 
+ *
  * - The following function is called to enable output signals and define their sampling rate / operation mode.
- * 
+ *
  * | Steps                                       |  Function                  |
  * |---------------------------------------------|----------------------------|
  * | Enable library outputs with specified mode  | bsec_update_subscription() |
  *
- * 
+ *
  * - This table describes the main processing loop.
- * 
+ *
  * | Steps                                     | Function                         |
  * |-------------------------------------------|----------------------------------|
  * | Retrieve sensor settings to be used       | bsec_sensor_control()            |
@@ -104,30 +104,30 @@
  * | Read results from sensor                  | See BME690 API and example codes |
  * | Perform signal processing                 | bsec_do_steps()                  |
  *
- * 
- * - Before shutting down the system, the current state of BSEC can be retrieved and can then be used during 
+ *
+ * - Before shutting down the system, the current state of BSEC can be retrieved and can then be used during
  *   re-initialization to continue processing.
- *   
+ *
  * | Steps                                       | Function          |
  * |---------------------------------------------|-------------------|
  * | Retrieve the current library state          |  bsec_get_state() |
  * | Retrieve the current library configuration  |  bsec_get_configuration() |
- * 
- * 
- * ### Configuration and state                       
- * 
+ *
+ *
+ * ### Configuration and state
+ *
  * Values of variables belonging to a BSEC instance are divided into two groups:
- *  - Values **not updated by processing** of signals belong to the **configuration group**. If available, BSEC can be 
+ *  - Values **not updated by processing** of signals belong to the **configuration group**. If available, BSEC can be
  *    configured before use with a customer specific configuration string.
- *  - Values **updated during processing** are member of the **state group**. Saving and restoring of the state of BSEC 
- *    is necessary to maintain previously estimated sensor models and baseline information which is important for best 
+ *  - Values **updated during processing** are member of the **state group**. Saving and restoring of the state of BSEC
+ *    is necessary to maintain previously estimated sensor models and baseline information which is important for best
  *    performance of the gas sensor outputs.
- * 
- * @note BSEC library consists of adaptive algorithms which models the gas sensor which improves its performance over 
- *       the time. These will be lost if library is initialized due to system reset. In order to avoid this situation 
+ *
+ * @note BSEC library consists of adaptive algorithms which models the gas sensor which improves its performance over
+ *       the time. These will be lost if library is initialized due to system reset. In order to avoid this situation
  *       library state shall be stored in non volatile memory so that it can be loaded after system reset.
  *
- * 
+ *
  *   @{
  */
 
@@ -135,7 +135,7 @@
 /* function prototype declarations */
 
 /*!
- * @brief Function that provides the size of the internal instance in bytes. 
+ * @brief Function that provides the size of the internal instance in bytes.
  * To be used for allocating memory for struct BSEC_STRUCT_NAME
  * @return Size of the internal instance in bytes
  */
@@ -150,16 +150,16 @@ size_t bsec_get_instance_size(void);
  *
  * See also: bsec_version_t
  *
-*/
+ */
 bsec_library_return_t bsec_get_version(void *inst, bsec_version_t *bsec_version_p);
 
 /*!
  * @brief Initialize the library instance
  *
- * Initialization and reset of BSEC library instance is performed by calling bsec_init(). Calling this function sets up the relation 
+ * Initialization and reset of BSEC library instance is performed by calling bsec_init(). Calling this function sets up the relation
  * among all internal modules, initializes run-time dependent library states and resets the configuration and state
  * of all BSEC signal processing modules to defaults.
- * 
+ *
  * Before any further use, the library must be initialized. This ensure that all memory and states are in defined
  * conditions prior to processing any data.
  *
@@ -167,32 +167,32 @@ bsec_library_return_t bsec_get_version(void *inst, bsec_version_t *bsec_version_
  *
  * @return Zero if successful, otherwise an error code
  *
-*/
+ */
 bsec_library_return_t bsec_init(void *inst);
 
 /*!
  * @brief Subscribe to library virtual sensors outputs
  *
- * Use bsec_update_subscription() to instruct BSEC which of the processed output signals 
+ * Use bsec_update_subscription() to instruct BSEC which of the processed output signals
  * of the library instance are requested at which sample rates.
  *
- * See ::bsec_virtual_sensor_t for available library outputs. 
+ * See ::bsec_virtual_sensor_t for available library outputs.
  *
- * Based on the requested virtual sensors outputs, BSEC will provide information about the required physical sensor input signals 
+ * Based on the requested virtual sensors outputs, BSEC will provide information about the required physical sensor input signals
  * (see ::bsec_physical_sensor_t) with corresponding sample rates. This information is purely informational as bsec_sensor_control()
  * will ensure the sensor is operated in the required manner. To disable a virtual sensor, set the sample rate to ::BSEC_SAMPLE_RATE_DISABLED.
  *
- * The subscription update using bsec_update_subscription() is apart from the signal processing one of the the most 
- * important functions. It allows to enable the desired library outputs. The function determines which physical input 
- * sensor signals are required at which sample rate to produce the virtual output sensor signals requested by the user. 
- * When this function returns with success, the requested outputs are called subscribed. A very important feature is the 
- * retaining of already subscribed outputs. Further outputs can be requested or disabled both individually and 
- * group-wise in addition to already subscribed outputs without changing them unless a change of already subscribed 
+ * The subscription update using bsec_update_subscription() is apart from the signal processing one of the the most
+ * important functions. It allows to enable the desired library outputs. The function determines which physical input
+ * sensor signals are required at which sample rate to produce the virtual output sensor signals requested by the user.
+ * When this function returns with success, the requested outputs are called subscribed. A very important feature is the
+ * retaining of already subscribed outputs. Further outputs can be requested or disabled both individually and
+ * group-wise in addition to already subscribed outputs without changing them unless a change of already subscribed
  * outputs is requested.
  *
  * @note The state of the library concerning the subscribed outputs cannot be retained among reboots.
  *
- * The interface of bsec_update_subscription() requires the usage of arrays of sensor configuration structures. 
+ * The interface of bsec_update_subscription() requires the usage of arrays of sensor configuration structures.
  * Such a structure has the fields sensor identifier and sample rate. These fields have the properties:
  *  - Output signals of virtual sensors must be requested using unique identifiers (Member of ::bsec_virtual_sensor_t)
  *  - Different sets of identifiers are available for inputs of physical sensors and outputs of virtual sensors
@@ -205,9 +205,9 @@ bsec_library_return_t bsec_init(void *inst);
  *
  * The usage principles of bsec_update_subscription() are:
  *  - Differential updates (i.e., only asking for outputs that the user would like to change) is supported.
- *  - Invalid requests of outputs are ignored. Also if one of the requested outputs is unavailable, all the requests 
+ *  - Invalid requests of outputs are ignored. Also if one of the requested outputs is unavailable, all the requests
  *    are ignored. At the same time, a warning is returned.
- *  - To disable BSEC, all outputs shall be turned off. Only enabled (subscribed) outputs have to be disabled while 
+ *  - To disable BSEC, all outputs shall be turned off. Only enabled (subscribed) outputs have to be disabled while
  *    already disabled outputs do not have to be disabled explicitly.
  *
  *
@@ -225,32 +225,32 @@ bsec_library_return_t bsec_init(void *inst);
  *
  */
 bsec_library_return_t bsec_update_subscription(void *inst, const bsec_sensor_configuration_t *const requested_virtual_sensors,
-													 const uint8_t n_requested_virtual_sensors, bsec_sensor_configuration_t *required_sensor_settings,
-													 uint8_t *n_required_sensor_settings);
+                                               const uint8_t n_requested_virtual_sensors, bsec_sensor_configuration_t *required_sensor_settings,
+                                               uint8_t *n_required_sensor_settings);
 
 /*!
  * @brief Main signal processing function of BSEC library instance
  *
  *
  * Processing of the input signals and returning of output samples for each instances of BSEC library is performed by bsec_do_steps().
- * - The samples of all library inputs must be passed with unique identifiers representing the input signals from 
- *   physical sensors where the order of these inputs can be chosen arbitrary. However, all input have to be provided 
- *   within the same time period as they are read. A sequential provision to the library might result in undefined 
+ * - The samples of all library inputs must be passed with unique identifiers representing the input signals from
+ *   physical sensors where the order of these inputs can be chosen arbitrary. However, all input have to be provided
+ *   within the same time period as they are read. A sequential provision to the library might result in undefined
  *   behavior.
- * - The samples of all library outputs are returned with unique identifiers corresponding to the output signals of 
+ * - The samples of all library outputs are returned with unique identifiers corresponding to the output signals of
  *   virtual sensors where the order of the returned outputs may be arbitrary.
- * - The samples of all input as well as output signals of physical as well as virtual sensors use the same 
+ * - The samples of all input as well as output signals of physical as well as virtual sensors use the same
  *   representation in memory with the following fields:
  * - Sensor identifier:
  *   - For inputs: required to identify the input signal from a physical sensor
  *   - For output: overwritten by bsec_do_steps() to identify the returned signal from a virtual sensor
  *   - Time stamp of the sample
  *
- * Calling bsec_do_steps() requires the samples of the input signals to be provided along with their time stamp when 
- * they are recorded and only when they are acquired. Repetition of samples with the same time stamp are ignored and 
- * result in a warning. Repetition of values of samples which are not acquired anew by a sensor result in deviations 
- * of the computed output signals. Concerning the returned output samples, an important feature is, that a value is 
- * returned for an output only when a new occurrence has been computed. A sample of an output signal is returned only 
+ * Calling bsec_do_steps() requires the samples of the input signals to be provided along with their time stamp when
+ * they are recorded and only when they are acquired. Repetition of samples with the same time stamp are ignored and
+ * result in a warning. Repetition of values of samples which are not acquired anew by a sensor result in deviations
+ * of the computed output signals. Concerning the returned output samples, an important feature is, that a value is
+ * returned for an output only when a new occurrence has been computed. A sample of an output signal is returned only
  * once.
  *
  *
@@ -269,7 +269,7 @@ bsec_library_return_t bsec_do_steps(void *inst, const bsec_input_t *const inputs
 /*!
  * @brief Reset a particular virtual sensor output of the library instance
  *
- * This function allows specific virtual sensor outputs of each library instance to be reset to be reset. The meaning of "reset" depends on the specific 
+ * This function allows specific virtual sensor outputs of each library instance to be reset to be reset. The meaning of "reset" depends on the specific
  * output. In case of the IAQ output, reset means zeroing the output to the current ambient conditions.
  *
  * @param[in,out]   inst                Reference to the pointer containing the instance
@@ -283,12 +283,12 @@ bsec_library_return_t bsec_reset_output(void *inst, uint8_t sensor_id);
 /*!
  * @brief Update algorithm configuration parameters of the library instance
  *
- * BSEC uses a default configuration for the modules and common settings. The initial configuration can be customized 
+ * BSEC uses a default configuration for the modules and common settings. The initial configuration can be customized
  * by bsec_set_configuration(). This is an optional step.
- * 
- * @note A work buffer with sufficient size is required and has to be provided by the function caller to decompose 
+ *
+ * @note A work buffer with sufficient size is required and has to be provided by the function caller to decompose
  * the serialization and apply it to the library and its modules.
- * 
+ *
  * Please use #BSEC_MAX_PROPERTY_BLOB_SIZE for allotting the required size.
  *
  * @param[in,out]   inst                    Reference to the pointer containing the instance
@@ -301,17 +301,17 @@ bsec_library_return_t bsec_reset_output(void *inst, uint8_t sensor_id);
  *
  */
 bsec_library_return_t bsec_set_configuration(void *inst, const uint8_t *const serialized_settings,
-												   const uint32_t n_serialized_settings, uint8_t *work_buffer,
-												   const uint32_t n_work_buffer_size);
+                                             const uint32_t n_serialized_settings, uint8_t *work_buffer,
+                                             const uint32_t n_work_buffer_size);
 /*!
  * @brief Restore the internal state of the library instance
  *
- * BSEC uses a default state for all signal processing modules and the BSEC module for each instance. To ensure optimal performance, 
+ * BSEC uses a default state for all signal processing modules and the BSEC module for each instance. To ensure optimal performance,
  * especially of the gas sensor functionality, it is recommended to retrieve the state using bsec_get_state()
- * before unloading the library, storing it in some form of non-volatile memory, and setting it using bsec_set_state() 
+ * before unloading the library, storing it in some form of non-volatile memory, and setting it using bsec_set_state()
  * before resuming further operation of the library.
- * 
- * @note A work buffer with sufficient size is required and has to be provided by the function caller to decompose the 
+ *
+ * @note A work buffer with sufficient size is required and has to be provided by the function caller to decompose the
  * serialization and apply it to the library and its modules.
  *
  * Please use #BSEC_MAX_STATE_BLOB_SIZE for allotting the required size.
@@ -324,20 +324,20 @@ bsec_library_return_t bsec_set_configuration(void *inst, const uint8_t *const se
  *
  * @return Zero when successful, otherwise an error code
  *
-*/
+ */
 bsec_library_return_t bsec_set_state(void *inst, const uint8_t *const serialized_state, const uint32_t n_serialized_state,
-										   uint8_t *work_buffer, const uint32_t n_work_buffer_size);
+                                     uint8_t *work_buffer, const uint32_t n_work_buffer_size);
 
 /*!
  * @brief Retrieve the current library instance configuration
  *
- * BSEC allows to retrieve the current configuration of the library instance using bsec_get_configuration(). 
+ * BSEC allows to retrieve the current configuration of the library instance using bsec_get_configuration().
  * This API returns a binary blob encoding.
  * the current configuration parameters of the library in a format compatible with bsec_set_configuration().
  *
  * Please use #BSEC_MAX_PROPERTY_BLOB_SIZE for allotting the required size.
  *
- * @param[in,out]   inst                        Reference to the pointer containing the instance 
+ * @param[in,out]   inst                        Reference to the pointer containing the instance
  * @param[in]       config_id                   Identifier for a specific set of configuration settings to be returned;
  *                                              shall be zero to retrieve all configuration settings.
  * @param[out]      serialized_settings         Buffer to hold the serialized config blob
@@ -350,17 +350,17 @@ bsec_library_return_t bsec_set_state(void *inst, const uint8_t *const serialized
  *
  */
 bsec_library_return_t bsec_get_configuration(void *inst, const uint8_t config_id, uint8_t *serialized_settings, const uint32_t n_serialized_settings_max,
-												   uint8_t *work_buffer, const uint32_t n_work_buffer, uint32_t *n_serialized_settings);
+                                             uint8_t *work_buffer, const uint32_t n_work_buffer, uint32_t *n_serialized_settings);
 
 /*!
  *@brief Retrieve the current internal library instance state
  *
- * BSEC allows to retrieve the current states of all signal processing modules and the BSEC module of the library instance using 
+ * BSEC allows to retrieve the current states of all signal processing modules and the BSEC module of the library instance using
  * bsec_get_state(). This allows a restart of the processing after a reboot of the system by calling bsec_set_state().
- * 
+ *
  * Please use #BSEC_MAX_STATE_BLOB_SIZE for allotting the required size.
  *
- * @param[in,out]   inst                        Reference to the pointer containing the instance 
+ * @param[in,out]   inst                        Reference to the pointer containing the instance
  * @param[in]       state_set_id                Identifier for a specific set of states to be returned; shall be
  *                                              zero to retrieve all states.
  * @param[out]      serialized_state            Buffer to hold the serialized config blob
@@ -373,28 +373,28 @@ bsec_library_return_t bsec_get_configuration(void *inst, const uint8_t config_id
  *
  */
 bsec_library_return_t bsec_get_state(void *inst, const uint8_t state_set_id, uint8_t *serialized_state,
-										   const uint32_t n_serialized_state_max, uint8_t *work_buffer, const uint32_t n_work_buffer,
-										   uint32_t *n_serialized_state);
+                                     const uint32_t n_serialized_state_max, uint8_t *work_buffer, const uint32_t n_work_buffer,
+                                     uint32_t *n_serialized_state);
 
 /*!
  * @brief Retrieve BMExxx sensor instructions for the library instance
  *
- * The bsec_sensor_control() interface is a key feature of BSEC, as it allows an easy way for the signal processing library to control the operation of the 
- * BME sensor using the correspodning BSEC library instance. This is important since gas sensor behaviour is mainly 
- * determined by how the integrated heater is configured. To ensure an easy integration of BSEC into any system, 
- * bsec_sensor_control() will provide the caller with information about the current sensor configuration that is 
- * necessary to fulfill the input requirements derived from the current outputs requested via 
+ * The bsec_sensor_control() interface is a key feature of BSEC, as it allows an easy way for the signal processing library to control the operation of the
+ * BME sensor using the correspodning BSEC library instance. This is important since gas sensor behaviour is mainly
+ * determined by how the integrated heater is configured. To ensure an easy integration of BSEC into any system,
+ * bsec_sensor_control() will provide the caller with information about the current sensor configuration that is
+ * necessary to fulfill the input requirements derived from the current outputs requested via
  * bsec_update_subscription().
  *
  * In practice the use of this function shall be as follows:
  * - Call bsec_sensor_control() which returns a bsec_bme_settings_t struct.
- * - Based on the information contained in this struct, the sensor is configured and a forced-mode measurement is 
+ * - Based on the information contained in this struct, the sensor is configured and a forced-mode measurement is
  *   triggered if requested by bsec_sensor_control().
- * - Once this forced-mode measurement is complete, the signals specified in this struct shall be passed to 
+ * - Once this forced-mode measurement is complete, the signals specified in this struct shall be passed to
  *   bsec_do_steps() to perform the signal processing.
  * - After processing, the process should sleep until the bsec_bme_settings_t::next_call timestamp is reached.
  *
- * 
+ *
  * @param[in,out]   inst                      Reference to the pointer containing the instance
  * @param [in]      time_stamp                Current timestamp in [ns]
  * @param[out]      sensor_settings           Settings to be passed to API to operate sensor at this time instance
@@ -403,7 +403,7 @@ bsec_library_return_t bsec_get_state(void *inst, const uint8_t state_set_id, uin
  */
 bsec_library_return_t bsec_sensor_control(void *inst, const int64_t time_stamp, bsec_bme_settings_t *sensor_settings);
 
-/*@}*/ //BSEC Interface
+/*@}*/        // BSEC Interface
 
 #ifdef __cplusplus
 }
