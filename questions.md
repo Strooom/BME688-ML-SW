@@ -1,23 +1,5 @@
 # Design Notes
 
-1. Let's start with one BME688, and enabling the second one later
-2. Interface mode is I2C, controlled by #define USE_I2C_INTERFACE (what a bloody old-school way to do this...)
-3. I2C address used is BME68X_I2C_ADDR_HIGH or BME68X_I2C_ADDR_LOW
-
-# Initializing the BME688 interface :
-1. populate a bme68x_dev struct
-    bme68x_g.intf  = BME68X_I2C_INTF;
-    dev_addr       = BME68X_I2C_ADDR_HIGH;
-    bme68x_g.read  = bme68x_i2c_read; <-- pointers to OUR platforms I2C read function
-    bme68x_g.write = bme68x_i2c_write; <-- pointers to OUR platforms I2C write function
-    bme68x_g.delay_us = sleep; <-- pointer to us sleep function on our platform
-    bme68x_g.intf_ptr = &dev_addr; <-- ???  
-    bme68x_g.amb_temp = 25;
-
-2. Call ret.bme68x_status = bme68x_init(&bme68x_g); with this struct as parameter
-3. return value is type int8_t bme68x_status; and is stored in member of return_values_init; struct
-
-
 
 # Initializing BSEC library
 1. call     ret.bsec_status = bsec_init(); // TODO need to check parameters...
@@ -38,14 +20,6 @@ ret.bsec_status = bme68x_bsec_update_subscription(sample_rate);
 
 ## BME688 ##
 
-The new sensor needs to be conditioned before the example can work reliably. You may run this example for 24hrs to let the sensor stabilize.
-Once ? 
-
-
-
-
-## DevKit ##
-* What does BLE do ? It seems to be a serial link over bluetooth, to send measurements and receive config
 
 
 

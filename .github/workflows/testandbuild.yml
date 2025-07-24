@@ -1,12 +1,12 @@
-name: Test, Build and Release
+name: Test and Build 
 on:
   workflow_dispatch:
   push:
-    branches: [main, develop, sonar_ci]
+    branches: [main, develop]
 
 jobs:
   versioning:
-    name: Determine version, Test, Build and Release
+    name: Determine version, Test and Build
     permissions: write-all
 
     runs-on: ubuntu-latest
@@ -24,9 +24,6 @@ jobs:
       nextpatchdigit: ${{ steps.selectversion.outputs.nextpatchdigit }}
       buildversion: ${{ steps.selectversion.outputs.buildversion }}
       buildversionfilename: ${{ steps.selectversion.outputs.buildversionfilename }}
-
-    env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
 
     steps:
       - name: Enable caching
@@ -176,9 +173,6 @@ jobs:
         run: |
           pip install gcovr==5.0
 
-      - name: Install sonar-scanner and build-wrapper
-        uses: sonarsource/sonarcloud-github-c-cpp@v3
-
       - name: Install PlatformIO Core
         run: |
           pip install --upgrade platformio
@@ -200,9 +194,9 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   
-      - name: Generate Compilation DataBase
-        run: |
-          pio run -t compiledb
+      # - name: Generate Compilation DataBase
+      #   run: |
+      #     pio run -t compiledb
 
       # cloud build is currently not working...
       # - name: Build
