@@ -7,6 +7,7 @@
 #include <uart1.hpp>
 #include <i2c1.hpp>
 #include <i2c3.hpp>
+#include <spi.hpp>
 #include <delay.hpp>
 #include <logging.hpp>
 #include <float.hpp>
@@ -15,194 +16,185 @@
 #include <bme68x_defs.h>
 #include <bme68x.h>
 #include <bsec_interface.h>
-
+// #include <bsec_selectivity.h>
+#include "detect vinegar_354_510.h"
 #include <stm32l4xx_hal_msp.c>
 #include <stm32l4xx_it.c>
 
-// I2C_HandleTypeDef hi2c1;            // I2C1 = communication with mother board = MuMo
-// I2C_HandleTypeDef hi2c3;            // I2C3 = communication with BME688 sensors
-// LPTIM_HandleTypeDef hlptim1;        // low power internal timing
-SPI_HandleTypeDef hspi1;            // SPI = towards SD card
-// UART_HandleTypeDef huart1;          // UART1 = communication with debug console
+#include <bsec2.h>
 
-// void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_I2C1_Init(void);
 static void MX_LPTIM1_Init(void);
-static void MX_SPI1_Init(void);
-static void MX_USART1_UART_Init(void);
+
+#define NUM_OF_SENS 2
+#define SAMPLE_RATE BSEC_SAMPLE_RATE_SCAN
+
+Bsec2 envSensor[NUM_OF_SENS];
+uint8_t bsecMemBlock[NUM_OF_SENS][BSEC_INSTANCE_SIZE];
+uint8_t sensor = 0;
+
+void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec) {
+    if (!outputs.nOutputs) {
+        return;
+    }
+
+uint32_t minutes{0};
+uint32_t seconds{0};
+uint32_t milliseconds{0};
+
+minutes = static_cast<uint32_t>(outputs.output[0].time_stamp / INT64_C(60000000000));
+seconds = static_cast<uint32_t>((outputs.output[0].time_stamp % INT64_C(60000000000)) / INT64_C(1000000000));
+milliseconds = static_cast<uint32_t>((outputs.output[0].time_stamp % INT64_C(1000000000)) / INT64_C(1000000));
+
+    logging::snprintf("\n%02d:%02d:%03d : sensor[%d]\n", minutes, seconds, milliseconds, sensor);
+    for (uint8_t i = 0; i < outputs.nOutputs; i++) {
+        const bsecData output = outputs.output[i];
+        switch (output.sensor_id) {
+            case BSEC_OUTPUT_IAQ:
+                logging::snprintf("IAQ = %d \n", (int)output.signal);
+                logging::snprintf("IAQ accuracy = %d \n", (int)output.accuracy);
+                break;
+            case BSEC_OUTPUT_RAW_TEMPERATURE:
+                logging::snprintf("Temperature = %d.%02d\n", integerPart(output.signal, 2), fractionalPart(output.signal, 2));
+                break;
+            case BSEC_OUTPUT_RAW_PRESSURE:
+                logging::snprintf("Pressure = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_RAW_HUMIDITY:
+                logging::snprintf("Humidity = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_RAW_GAS:
+                logging::snprintf("Gas resistance = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_STABILIZATION_STATUS:
+                logging::snprintf("Stabilization status = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_RUN_IN_STATUS:
+                logging::snprintf("Run in status = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
+                logging::snprintf("Compensated temperature = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
+                logging::snprintf("Compensated humidity = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_STATIC_IAQ:
+                logging::snprintf("Static IAQ = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_CO2_EQUIVALENT:
+                logging::snprintf("CO2 Equivalent = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_BREATH_VOC_EQUIVALENT:
+                logging::snprintf("bVOC equivalent = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_GAS_PERCENTAGE:
+                logging::snprintf("Gas percentage = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_COMPENSATED_GAS:
+                logging::snprintf("Compensated gas = %d \n", (int)output.signal);
+                break;
+            case BSEC_OUTPUT_GAS_ESTIMATE_1:
+                logging::snprintf("Pure air : %d.%02d\n", integerPart(output.signal, 2), fractionalPart(output.signal, 2));
+                break;
+            case BSEC_OUTPUT_GAS_ESTIMATE_2:
+                logging::snprintf("Vinegar  : %d.%02d\n", integerPart(output.signal, 2), fractionalPart(output.signal, 2));
+                break;
+            case BSEC_OUTPUT_RAW_GAS_INDEX:
+                logging::snprintf("Raw gas index = %d \n", (int)output.signal);
+                break;
+            default:
+                logging::snprintf("other output %d \n", (int)(output.signal * 100.0F));
+                break;
+        }
+    }
+}
+
+void checkBsecStatus(Bsec2 bsec) {
+    if (bsec.status < BSEC_OK) {
+        logging::snprintf("BSEC error code %d \n", bsec.status);
+    } else if (bsec.status > BSEC_OK) {
+        logging::snprintf("BSEC warning code : %d \n", bsec.status);
+    }
+    if (bsec.sensor.status < BME68X_OK) {
+        logging::snprintf("BME68X error code : %d \n", bsec.sensor.status);
+    } else if (bsec.sensor.status > BME68X_OK) {
+        logging::snprintf("BME68X warning code : %d \n", bsec.sensor.status);
+    }
+}
 
 int main(void) {
     HAL_Init();
     SystemClock_Config();
 
-    // HAL_Delay(8000);        // give the debugger time to connect
+    HAL_Delay(1000);
 
-    MX_GPIO_Init();
-    MX_I2C1_Init();
-    MX_LPTIM1_Init();
-    MX_SPI1_Init();
-    MX_FATFS_Init();
+//    MX_GPIO_Init();
+//    MX_LPTIM1_Init();
+//    MX_FATFS_Init();
 
     gpio::enableClocks();
     uart1::wakeUp();
     logging::enable(logging::destination::uart1);
     i2c3::wakeUp();
 
-    struct bme68x_dev sensor0;
-    memset(&sensor0, 0, sizeof(sensor0));
-    uint8_t sensor0I2cAddress = BME68X_I2C_ADDR_LOW;
-    sensor0.intf              = BME68X_I2C_INTF;
-    sensor0.read              = i2c3::read;
-    sensor0.write             = i2c3::write;
-    sensor0.delay_us          = delay_us;
-    sensor0.intf_ptr          = &sensor0I2cAddress;
-    sensor0.amb_temp          = 22;
+    /* Desired subscription list of BSEC2 outputs */
+    bsecSensor sensorList[] = {
+        // BSEC_OUTPUT_IAQ,
+        // BSEC_OUTPUT_RAW_TEMPERATURE,
+        // BSEC_OUTPUT_RAW_PRESSURE,
+        // BSEC_OUTPUT_RAW_HUMIDITY,
+        BSEC_OUTPUT_GAS_ESTIMATE_1,
+        BSEC_OUTPUT_GAS_ESTIMATE_2,
+        BSEC_OUTPUT_RAW_GAS,
+        BSEC_OUTPUT_RAW_GAS_INDEX,
+        // BSEC_OUTPUT_STABILIZATION_STATUS,
+        // BSEC_OUTPUT_RUN_IN_STATUS,
+        // BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,
+        // BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,
+        // BSEC_OUTPUT_STATIC_IAQ,
+        // BSEC_OUTPUT_CO2_EQUIVALENT,
+        // BSEC_OUTPUT_BREATH_VOC_EQUIVALENT,
+        // BSEC_OUTPUT_GAS_PERCENTAGE,
+        // BSEC_OUTPUT_COMPENSATED_GAS
+    };
 
-    struct bme68x_dev sensor1;
-    memset(&sensor1, 0, sizeof(sensor1));
-    uint8_t sensor1I2cAddress = BME68X_I2C_ADDR_HIGH;
-    sensor1.intf              = BME68X_I2C_INTF;
-    sensor1.read              = i2c3::read;
-    sensor1.write             = i2c3::write;
-    sensor1.delay_us          = delay_us;
-    sensor1.intf_ptr          = &sensor1I2cAddress;
-    sensor1.amb_temp          = 22;
+    uint8_t sensorI2cAddress[2]{BME68X_I2C_ADDR_LOW, BME68X_I2C_ADDR_HIGH};
 
-    int8_t initResult;
-    initResult = bme68x_init(&sensor0);
-    initResult = bme68x_init(&sensor1);
+    for (uint8_t i = 0; i < NUM_OF_SENS; i++) {
+        /* Assigning a chunk of memory block to the bsecInstance */
+        envSensor[i].allocateMemory(bsecMemBlock[i]);
 
-    #define NUM_OF_SENS 2
-    uint8_t *bsecInstance[NUM_OF_SENS];
-    bsec_version_t bsecVersion;
-    bsec_library_return_t getVersionResult;
-    getVersionResult = bsec_get_version(bsecInstance, &bsecVersion);
-    logging::snprintf("Version = %d.%d.%d.%d\n", bsecVersion.major, bsecVersion.minor, bsecVersion.major_bugfix, bsecVersion.minor_bugfix);
+        /* Initialize the library and interfaces */
 
-    // struct bme68x_conf config0;
-    // struct bme68x_heatr_conf heaterConfig0;
-    // struct bme68x_data data;
+        if (!envSensor[i].begin(BME68X_I2C_INTF, i2c3::read, i2c3::write, delay_us, &sensorI2cAddress[i])) {
+            checkBsecStatus(envSensor[i]);
+        }
 
-    // config0.filter  = BME68X_FILTER_OFF;
-    // config0.odr     = BME68X_ODR_NONE;
-    // config0.os_hum  = BME68X_OS_16X;
-    // config0.os_pres = BME68X_OS_1X;
-    // config0.os_temp = BME68X_OS_2X;
+        if (!envSensor[i].setConfig(bsec_config_selectivity)) {
+            checkBsecStatus(envSensor[i]);
+        }
 
-    // int8_t configResult;
-    // configResult = bme68x_set_conf(&config0, &sensor0);
+        /* Subscribe to the desired BSEC2 outputs */
+        if (!envSensor[i].updateSubscription(sensorList, ARRAY_LEN(sensorList), SAMPLE_RATE)) {
+            checkBsecStatus(envSensor[i]);
+        }
 
-    // heaterConfig0.enable     = BME68X_ENABLE;
-    // heaterConfig0.heatr_temp = 300;
-    // heaterConfig0.heatr_dur  = 100;
+        /* Whenever new data is available call the newDataCallback function */
+        envSensor[i].attachCallback(newDataCallback);
+    }
 
-    // int8_t heaterConfigResult;
-    // heaterConfigResult = bme68x_set_heatr_conf(BME68X_FORCED_MODE, &heaterConfig0, &sensor0);
+    // Serial.println("BSEC library version " + String(envSensor[0].version.major) + "." + String(envSensor[0].version.minor) + "." + String(envSensor[0].version.major_bugfix) + "." + String(envSensor[0].version.minor_bugfix));
+    logging::snprintf("\n\n\nBSEC Initialized\n");
 
-    // uint16_t sample_count{0};
     while (true) {
-        // int8_t setModeResult;
-        // setModeResult = bme68x_set_op_mode(BME68X_FORCED_MODE, &sensor0);
-
-        // uint32_t del_period = bme68x_get_meas_dur(BME68X_FORCED_MODE, &config0, &sensor0) + (heaterConfig0.heatr_dur * 1000);
-        // sensor0.delay_us(del_period, sensor0.intf_ptr);
-
-        // uint8_t n_fields;
-        // int8_t getDataResult = bme68x_get_data(BME68X_FORCED_MODE, &data, &n_fields, &sensor0);
-
-        // if (n_fields) {
-        //     logging::snprintf("%03u : %d.%02d C, %d.%01d %%, %d hPa\n", sample_count, integerPart(data.temperature, 2), fractionalPart(data.temperature, 2), integerPart(data.humidity, 1), fractionalPart(data.humidity, 1), integerPart(data.pressure / 100.0F, 0));
-        //     // logging::snprintf("%u, %d, %lu, %lu, %lu, 0x%x\n", sample_count, (data.temperature / 100), (long unsigned int)data.pressure, (long unsigned int)(data.humidity / 1000), (long unsigned int)data.gas_resistance, data.status);
-        // }
-        // HAL_Delay(1000);
-        // sample_count++;
+        /* Call the run function often so that the library can check if it is time to read new data from the sensor and process it. */
+        for (sensor = 0; sensor < NUM_OF_SENS; sensor++) {
+            if (!envSensor[sensor].run()) {
+                checkBsecStatus(envSensor[sensor]);
+            }
+        }
     }
 }
-
-/**
- * @brief I2C1 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_I2C1_Init(void) {
-    /* USER CODE BEGIN I2C1_Init 0 */
-
-    /* USER CODE END I2C1_Init 0 */
-
-    /* USER CODE BEGIN I2C1_Init 1 */
-
-    /* USER CODE END I2C1_Init 1 */
-    hi2c1.Instance              = I2C1;
-    hi2c1.Init.Timing           = 0x00B07CB4;
-    hi2c1.Init.OwnAddress1      = 36;
-    hi2c1.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
-    hi2c1.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
-    hi2c1.Init.OwnAddress2      = 0;
-    hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-    hi2c1.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
-    hi2c1.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
-    if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
-        Error_Handler();
-    }
-
-    /** Configure Analogue filter
-     */
-    if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
-        Error_Handler();
-    }
-
-    /** Configure Digital filter
-     */
-    if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK) {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN I2C1_Init 2 */
-
-    /* USER CODE END I2C1_Init 2 */
-}
-
-/**
- * @brief I2C3 Initialization Function
- * @param None
- * @retval None
- */
-// static void MX_I2C3_Init(void) {
-//     /* USER CODE BEGIN I2C3_Init 0 */
-
-//     /* USER CODE END I2C3_Init 0 */
-
-//     /* USER CODE BEGIN I2C3_Init 1 */
-
-//     /* USER CODE END I2C3_Init 1 */
-//     hi2c3.Instance              = I2C3;
-//     hi2c3.Init.Timing           = 0x00B07CB4;
-//     hi2c3.Init.OwnAddress1      = 0;
-//     hi2c3.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
-//     hi2c3.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
-//     hi2c3.Init.OwnAddress2      = 0;
-//     hi2c3.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-//     hi2c3.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
-//     hi2c3.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
-//     if (HAL_I2C_Init(&hi2c3) != HAL_OK) {
-//         Error_Handler();
-//     }
-
-//     /** Configure Analogue filter
-//      */
-//     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
-//         Error_Handler();
-//     }
-
-//     /** Configure Digital filter
-//      */
-//     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK) {
-//         Error_Handler();
-//     }
-//     /* USER CODE BEGIN I2C3_Init 2 */
-
-//     /* USER CODE END I2C3_Init 2 */
-// }
 
 /**
  * @brief LPTIM1 Initialization Function
@@ -233,73 +225,6 @@ static void MX_LPTIM1_Init(void) {
 
     /* USER CODE END LPTIM1_Init 2 */
 }
-
-/**
- * @brief SPI1 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_SPI1_Init(void) {
-    /* USER CODE BEGIN SPI1_Init 0 */
-
-    /* USER CODE END SPI1_Init 0 */
-
-    /* USER CODE BEGIN SPI1_Init 1 */
-
-    /* USER CODE END SPI1_Init 1 */
-    /* SPI1 parameter configuration*/
-    hspi1.Instance               = SPI1;
-    hspi1.Init.Mode              = SPI_MODE_MASTER;
-    hspi1.Init.Direction         = SPI_DIRECTION_2LINES;
-    hspi1.Init.DataSize          = SPI_DATASIZE_8BIT;
-    hspi1.Init.CLKPolarity       = SPI_POLARITY_LOW;
-    hspi1.Init.CLKPhase          = SPI_PHASE_1EDGE;
-    hspi1.Init.NSS               = SPI_NSS_SOFT;
-    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
-    hspi1.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-    hspi1.Init.TIMode            = SPI_TIMODE_DISABLE;
-    hspi1.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
-    hspi1.Init.CRCPolynomial     = 7;
-    hspi1.Init.CRCLength         = SPI_CRC_LENGTH_DATASIZE;
-    hspi1.Init.NSSPMode          = SPI_NSS_PULSE_ENABLE;
-    if (HAL_SPI_Init(&hspi1) != HAL_OK) {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN SPI1_Init 2 */
-
-    /* USER CODE END SPI1_Init 2 */
-}
-
-/**
- * @brief USART1 Initialization Function
- * @param None
- * @retval None
- */
-// static void MX_USART1_UART_Init(void) {
-//     /* USER CODE BEGIN USART1_Init 0 */
-
-//     /* USER CODE END USART1_Init 0 */
-
-//     /* USER CODE BEGIN USART1_Init 1 */
-
-//     /* USER CODE END USART1_Init 1 */
-//     huart1.Instance                    = USART1;
-//     huart1.Init.BaudRate               = 115200;
-//     huart1.Init.WordLength             = UART_WORDLENGTH_8B;
-//     huart1.Init.StopBits               = UART_STOPBITS_1;
-//     huart1.Init.Parity                 = UART_PARITY_NONE;
-//     huart1.Init.Mode                   = UART_MODE_TX_RX;
-//     huart1.Init.HwFlowCtl              = UART_HWCONTROL_NONE;
-//     huart1.Init.OverSampling           = UART_OVERSAMPLING_16;
-//     huart1.Init.OneBitSampling         = UART_ONE_BIT_SAMPLE_DISABLE;
-//     huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-//     if (HAL_UART_Init(&huart1) != HAL_OK) {
-//         Error_Handler();
-//     }
-//     /* USER CODE BEGIN USART1_Init 2 */
-
-//     /* USER CODE END USART1_Init 2 */
-// }
 
 /**
  * @brief GPIO Initialization Function
@@ -367,4 +292,3 @@ void assert_failed(uint8_t *file, uint32_t line) {
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-

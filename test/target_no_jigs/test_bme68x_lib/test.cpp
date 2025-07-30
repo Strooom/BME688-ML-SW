@@ -5,7 +5,7 @@
 #include <clock.hpp>
 #include <gpio.hpp>
 #include <uart1.hpp>
-
+#include <i2c1.hpp>
 #include <i2c3.hpp>
 #include <delay.hpp>
 
@@ -13,11 +13,6 @@
 #include <bme68x.h>
 
 #include <unity.h>
-
-I2C_HandleTypeDef hi2c3;
-UART_HandleTypeDef huart1;
-I2C_HandleTypeDef hi2c1;
-LPTIM_HandleTypeDef hlptim1;
 
 // This test will initialize both BME68X sensors on the PCB, using the Bosch BME68X library
 

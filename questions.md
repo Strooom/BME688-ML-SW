@@ -1,5 +1,8 @@
 # Design Notes
 
+# note
+apparently the bsec_datatypes.h file is different for IAQ and IAQ_Sel : I think the latter can do both (IAQ and classification)
+
 
 # Initializing BSEC library
 1. call     ret.bsec_status = bsec_init(); // TODO need to check parameters...
@@ -47,3 +50,24 @@ reg : regression outputs
 * LP = 3 seconds update rate
 * 4 days calibration
 --> bme688_sel_33v_3s_4d
+
+
+
+# BME Devkit Reverse Engineered
+
+## Setup
+* initialize SD card
+* initialize RTC
+
+* if a .bmeconfig file is present (this is a JSON file, generated in the AI studio - currently only the 8x devkit board is supported)
+    read file and configure the sensors from it
+    then continuously lets all sensors create raw output and writes it to a logfile .bmerawdata and .bmelabelinfo
+    .bmerawdata is a JSON file
+    .bmelabelinfo is a JSON file ?? with timestamps when buttons have been pressed
+
+The filename 2025_07_07_09_03_Board_94B5556B2A48_PowerOnOff_1_6x8hmj4ox9bdx0vm_File_1 consists of
+* 2025_07_07_09_03 timestamp ?
+* Board_94B5556B2A48 : unique board ID
+* PowerOnOff_1_6x8hmj4ox9bdx0vm : seed powerOnOff
+* _File_1 : when data is split over multiple files ??
+

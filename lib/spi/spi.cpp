@@ -8,7 +8,9 @@
 
 #ifndef generic
 #include "main.h"
-extern SPI_HandleTypeDef hspi1;
+
+SPI_HandleTypeDef hspi1;        // SPI1 = towards SD card
+
 void MX_SPI1_Init(void);
 #endif
 

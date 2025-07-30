@@ -5,7 +5,7 @@
 #include <clock.hpp>
 #include <gpio.hpp>
 #include <uart1.hpp>
-
+#include <i2c1.hpp>
 #include <i2c3.hpp>
 #include <delay.hpp>
 
@@ -15,26 +15,23 @@
 
 #include <unity.h>
 
-I2C_HandleTypeDef hi2c3;
-UART_HandleTypeDef huart1;
-I2C_HandleTypeDef hi2c1;
-LPTIM_HandleTypeDef hlptim1;
-
-// This test will initialize both BME68X sensors on the PCB, using the Bosch BME68X library
+// This test will check some properties of the bsec library, to verify it is linked to the build
 
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_initialize() {
-#define NUM_OF_SENS 2
-    uint8_t* bsecInstance[NUM_OF_SENS];
+void test_getVersion() {
     bsec_version_t bsecVersion;
-    bsec_library_return_t getVersionResult;
-    getVersionResult = bsec_get_version(bsecInstance, &bsecVersion);
+
+    bsec_get_version(nullptr, &bsecVersion);
     TEST_ASSERT_EQUAL(3, bsecVersion.major);
     TEST_ASSERT_EQUAL(2, bsecVersion.minor);
     TEST_ASSERT_EQUAL(1, bsecVersion.major_bugfix);
     TEST_ASSERT_EQUAL(0, bsecVersion.minor_bugfix);
+}
+
+void test_getInstanceSize() {
+    TEST_ASSERT_EQUAL(1384, bsec_get_instance_size());
 }
 
 int main(int argc, char** argv) {
@@ -44,6 +41,7 @@ int main(int argc, char** argv) {
 
     i2c3::wakeUp();
     UNITY_BEGIN();
-    RUN_TEST(test_initialize);
+    RUN_TEST(test_getVersion);
+    RUN_TEST(test_getInstanceSize);
     UNITY_END();
 }
